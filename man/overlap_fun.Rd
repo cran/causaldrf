@@ -5,13 +5,13 @@
 \title{This function creates an overlapping dataset}
 \usage{
 overlap_fun(Y,
-                      treat,
-                      treat_formula,
-                      data_set,
-                      n_class,
-                      treat_mod,
-                      link_function,
-                      ...)
+            treat,
+            treat_formula,
+            data_set,
+            n_class,
+            treat_mod,
+            link_function,
+            ...)
 }
 \arguments{
 \item{Y}{is the the name of the outcome variable contained in \code{data}.}
@@ -30,7 +30,8 @@ of \code{X}: a symbolic description of the model to be fitted.}
 
 \item{treat_mod}{a description of the error distribution to be used in the
 model for treatment. Options include: \code{"Normal"} for normal model,
-\code{"LogNormal"} for lognormal model, \code{"Poisson"} for Poisson model,
+\code{"LogNormal"} for lognormal model,  \code{"Sqrt"} for square-root transformation
+to a normal treatment, \code{"Poisson"} for Poisson model,
 \code{"NegBinom"} for negative binomial model, \code{"Gamma"} for gamma
 model.}
 

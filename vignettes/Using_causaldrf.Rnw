@@ -1,0 +1,983 @@
+\documentclass[12pt]{article}
+\usepackage{fullpage}
+\usepackage{natbib}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage[utf8x]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{bbm}
+
+%\VignetteIndexEntry{Using causaldrf}
+%\VignetteDepends{}
+%\VignetteKeyWords{}
+%\VignettePackage{causaldrf}
+%\VignetteEngine{knitr::knitr}
+
+
+\newcommand{\bma}[1]{\mbox{\boldmath $#1$}}
+\newcommand{\proglang}[1]{\texttt{#1}}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\pkg}[1]{\texttt{#1}}
+
+% \linespread{1.8}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% custom abbreviations for this document
+\newcommand{\be}{\begin{equation}}
+\newcommand{\bea}{\begin{eqnarray}}
+\newcommand{\ee}{\end{equation}}
+\newcommand{\eea}{\end{eqnarray}}
+\newcommand{\nn}{\nonumber}
+\newcommand{\bA}{{\mbox{\boldmath $A$}}}
+\newcommand{\bX}{{\mbox{\boldmath $X$}}}
+\newcommand{\bY}{{\mbox{\boldmath $Y$}}}
+\newcommand{\bT}{{\mbox{\boldmath $T$}}}
+\newcommand{\bb}{{\mbox{\boldmath $b$}}}
+\newcommand{\bB}{{\mbox{\boldmath $B$}}}
+\newcommand{\bW}{{\mbox{\boldmath $W$}}}
+\newcommand{\bmu}{{\mbox{\boldmath $\mu$}}}
+\newcommand{\bnu}{{\mbox{\boldmath $\nu$}}}
+\newcommand{\bbeta}{{\mbox{\boldmath $\beta$}}}
+\newcommand{\balpha}{{\mbox{\boldmath $\alpha$}}}
+\newcommand{\bgamma}{{\mbox{\boldmath $\gamma$}}}
+\newcommand{\btheta}{{\mbox{\boldmath $\theta$}}}
+\newcommand{\bphi}{{\mbox{\boldmath $\phi$}}}
+\newcommand{\bxi}{{\mbox{\boldmath $\xi$}}}
+\newcommand{\bpsi}{{\mbox{\boldmath $\psi$}}}
+\newcommand{\bpi}{{\mbox{\boldmath $\pi$}}}
+\newcommand{\bdelta}{{\mbox{\boldmath $\delta$}}}
+\newcommand{\bSigma}{{\mbox{\boldmath $\Sigma$}}}
+\newcommand{\bGamma}{{\mbox{\boldmath $\Gamma$}}}
+\newcommand{\bOmega}{{\mbox{\boldmath $\Omega$}}}
+\newcommand{\bI}{{\mbox{\boldmath $I$}}}
+\newcommand{\bzero}{{\mbox{\boldmath $0$}}}
+
+
+
+\newcommand{\RRn}{1\!\!1}         % This is for indicator functions
+\newcommand{\quotes}[1]{``#1''}   % This is for quotes
+%\boldsymbol   %Use this to make greek symbols bold
+
+\overfullrule=5pt
+
+% \doublespace
+
+
+\begin{document}
+% \SweaveOpts{concordance=TRUE}
+
+<<include=FALSE>>=
+library(knitr)
+opts_chunk$set(
+concordance=TRUE
+)
+@
+
+\title{Estimating Average Dose Response Functions Using
+the R Package \texttt{causaldrf}}
+\author{Douglas Galagate, Joseph L. Schafer}
+\maketitle
+
+\begin{abstract}
+\vspace{-0.08in}
+
+This chapter describes the R package \texttt{causaldrf} for estimating
+average dose response functions (ADRF).  The R package contains functions
+to estimate ADRFs using parametric and non-parametric models when the data
+contains a continuous treatment variable.  The \texttt{causaldrf} R package is
+flexible and can be used on data sets containing treatment variables from
+a range of probability distributions.
+
+\end{abstract}
+\hrule
+\vspace{0.1in}
+
+\noindent {\em Keywords:} Causal Inference; Propensity Score; Generalized
+Propensity Score; Propensity Function; Average Dose Response Function.
+
+
+\section{Introduction}
+
+In this
+chapter, we provide examples to illustrate the flexibility and the ease
+of use of the \texttt{causaldrf} R package, which
+estimates the average dose response function (ADRF) when the treatment is
+continuous.  The \texttt{causaldrf} R package also provides methods
+for estimating average potential outcomes when the treatment is binary or
+multi-valued.
+The user can compare different methods to understand the sensitivity of the
+estimates and a way to check
+robustness.  The package contains new estimators based on a linear combination
+of a finite number of basis functions \cite{schafer2015causal}.
+In addition, \texttt{causaldrf}
+includes functions useful for model diagnostics such as assessing common support
+and for checking
+covariate balance.
+This package fills a gap in the R package space and
+offers a range of existing and new estimators described in the statistics
+literature such as \cite{schafer2015causal}, \cite{bia2014stata},
+\cite{flores2012estimating},
+\cite{imai2004causal}, \cite{hirano2004propensity},
+and \cite{robins2000marginal}.
+
+The \texttt{causaldrf} R package is currently available
+on the Comprehensive R Archive Network (CRAN).
+The R package contains 12 functions for estimating the ADRF which are explained
+in more detail in Chapters 2, 3, and in the documentation files for the package
+\url{https://cran.r-project.org/web/packages/causaldrf/index.html}.
+The user can choose which estimator to apply based on their particular problems
+and goals.
+
+
+
+This chapter is organized as follows.  In Section
+\ref{section:Sim_data_Moodie}, we introduce a simulated dataset from
+\cite{hirano2004propensity} and \cite{moodie2012estimation} and apply functions from \texttt{causaldrf}
+to estimate the ADRF.  In Section \ref{section:NMES_analysis}, we use data
+from the National Medical Expenditures Survey (NMES) to show the capabilities
+of \texttt{causaldrf} in analyzing a data set containing weights.  Section
+\ref{section:IHDP_analysis} contains data from the Infant Health and
+Development Program (IHDP) and applies methods from \texttt{causaldrf} to the data.
+Conclusions are presented in Section \ref{section:Discussion_examples}.
+
+
+
+
+
+
+
+\section{An Example Based on Simulated Data} \label{section:Sim_data_Moodie}
+%
+%\subsection{Simulation from \cite{schafer2015causal}}
+%
+%Recall that chapter 3 describes this simulation.  It contains .....
+%
+%
+
+This section demonstrates the use of the \texttt{causaldrf} package by using
+simulated data from \cite{hirano2004propensity} and \cite{moodie2012estimation}.
+This simulation constructs an ADRF with an easy to interpret functional form, and
+a means to clearly compare the performance of different estimation methods.
+
+Let $Y_{1}(t) | X_{1}, X_{2}
+\sim \mathcal{N}\left(t + (X_{1} + X_{2})e^{-t(X_{1} + X_{2})}, 1 \right)$
+and $X_{1}, X_{2}$ be unit exponentials, $T_{1} \sim \text{exp}(X_{1} + X_{2})$.
+The ADRF can be calculated by integrating out the covariates analytically
+\citep{moodie2012estimation},
+\begin{equation} \label{eq:HI_sim_truth}
+\mu(t) = E(Y_{i}(t)) = t + \frac{2}{(1 + t)^{3}}
+\end{equation}
+This example provides a setting to compare ADRF estimates with the true ADRF
+given in Equation \ref{eq:HI_sim_truth}.
+In this simulation, our goal is to demonstrate how to use the functions.
+We introduce a few of the estimators and show their plots.
+
+<<echo=FALSE>>=
+options(width=70)
+@
+First, install {\bf causaldrf} and then load the package:
+<<>>=
+library (causaldrf)
+@
+The data is generated from:
+<<>>=
+set.seed(301)
+hi_sample <- function(N){
+  X1 <- rexp(N)
+  X2 <- rexp(N)
+  T <- rexp(N, X1 + X2)
+  gps <- (X1 + X2) * exp(-(X1 + X2) * T)
+  Y <- T + gps + rnorm(N)
+  hi_data <- data.frame(cbind(X1, X2, T, gps, Y))
+  return(hi_data)
+}
+
+
+hi_sim_data <- hi_sample(1000)
+head(hi_sim_data)
+@
+
+
+<<echo= FALSE>>=
+
+overlap_list <- overlap_fun(Y = Y,
+                            treat = T,
+                            treat_formula = T ~ X1 + X2,
+                            data_set = hi_sim_data,
+                            n_class = 3,
+                            treat_mod = "Gamma",
+                            link_function = "inverse")
+
+overlap_data <- overlap_list$overlap_dataset
+
+
+t_mod_list <- t_mod(treat = T,
+                    treat_formula = T ~ X1 + X2 + I(X1^2) + I(X2^2),
+                    data = overlap_data,
+                    treat_mod = "Gamma",
+                    link_function = "inverse")
+cond_exp_data <- t_mod_list$T_data
+full_data <- cbind(overlap_data, cond_exp_data)
+@
+
+%' <<echo = FALSE>>=
+%'
+%' x <- hi_sim_data$T
+%' quantile_grid <- quantile(x, probs = seq(0, .95, by = 0.01))
+%' # quantile_grid <- quantile_grid[1:100]
+%' true_hi_fun <- function(t){t + 2/(1 + t)^3}
+%'
+%' plot(quantile_grid,
+%'      true_hi_fun(quantile_grid),
+%'      pch = ".",
+%'      main = "true ADRF",
+%'      xlab = "treat",
+%'      ylab = "Y",
+%'      col = "black")
+%'
+%' lines(quantile_grid,
+%'       true_hi_fun(quantile_grid),
+%'       col = "black",
+%'       lty = 1,
+%'       lwd = 2)
+%'
+%' @
+
+
+Below is code for a few different estimators of the ADRF.  The first is the additive
+spline estimator from \cite{bia2014stata}.  This estimator fits a treatment
+model to estimate the GPS.  Next, additive spline bases values are created for
+both the treatment and the GPS.  The outcome is regressed on the treatment,
+GPS, treatment bases, and GPS bases.  After the outcome model is estimated,
+each treatment grid value and set of covariates is plugged in to the model which
+corresponds to imputed values for each unit at that particular treatment value.
+The imputed values are averaged to get the estimated ADRF at that treatment value.
+Repeating this process for many treatment values, \code{grid\_val}, traces out
+the estimated ADRF.
+
+The arguments are: \code{Y} for the name of the outcome variable, \code{treat}
+for the name of the treatment variable, \code{treat\_formula} for the formula
+used to fit the treatment model, \code{data} for the name of the data set,
+\code{grid\_val} for a vector in the domain of the treatment for where the outcome
+is estimated, \code{knot\_num} for the number of knots for the spline fit, and
+\code{treat\_mod} for the treatment model that relates treatment with the
+covariates.
+
+In this example we fit the correct treatment model so that the GPS is correctly
+specified with a gamma distribution.
+
+<<>>=
+add_spl_estimate <- add_spl_est(Y = Y,
+                                treat = T,
+                                treat_formula = T ~ X1 + X2,
+                                data = hi_sim_data,
+                                grid_val = quantile(hi_sim_data$T,
+                                            probs = seq(0, .95, by = 0.01)),
+                                knot_num = 3,
+                                treat_mod = "Gamma",
+                                link_function = "inverse")
+@
+
+The next estimator is based on the generalized additive model.  This method
+requires a treatment formula and model to estimate the GPS.  The estimated
+GPS values are used to fit an outcome regression.  The outcome, \code{Y},
+is regressed on two things: the treatment, \code{T}, and spline basis
+terms from the GPS fit.
+
+<<>>=
+gam_estimate <- gam_est(Y = Y,
+                        treat = T,
+                        treat_formula = T ~ X1 + X2,
+                        data = hi_sim_data,
+                        grid_val = quantile(hi_sim_data$T,
+                                    probs = seq(0, .95, by = 0.01)),
+                        treat_mod = "Gamma",
+                        link_function = "inverse")
+@
+
+The Hirano-Imbens estimator also requires two models.  The first model regresses
+the treatment, \code{T}, on a set of covariates to estimate the GPS
+values.  The second step requires fitting the outcome, \code{Y}, on
+the observed treatment and fitted GPS values.  The summary above shows the
+fit of both the treatment model and outcome model.  Also shown is the
+estimated outcome values on the grid of treatment values, \code{quantile\_grid}.
+
+<<>>=
+hi_estimate <- hi_est(Y = Y,
+                      treat = T,
+                      treat_formula = T ~ X1 + X2,
+                      outcome_formula = Y ~ T + I(T^2) +
+                        gps + I(gps^2) + T * gps,
+                      data = hi_sim_data,
+                      grid_val = quantile(hi_sim_data$T,
+                                  probs = seq(0, .95, by = 0.01)),
+                      treat_mod = "Gamma",
+                      link_function = "inverse")
+@
+
+This last method, importance sampling,
+fits the treatment as a function of the covariates, then
+calculates GPS values.  The GPS values are used as inverse probability weights
+in the regression of \code{Y} on \code{T} \citep{robins2000marginal}.
+The estimated parameters
+correspond to coefficients for a quadratic model of the form
+$\hat{\mu}(t) = \hat{\alpha}_0 + \hat{\alpha}_1 t + \hat{\alpha}_2 t^2$.
+In this example, the estimator is restricted to a quadratic fit.
+
+<<>>=
+iptw_estimate <- iptw_est(Y = Y,
+                          treat = T,
+                          treat_formula = T ~ X1 + X2,
+                          numerator_formula = T ~ 1,
+                          data = hi_sim_data,
+                          degree = 2,
+                          treat_mod = "Gamma",
+                          link_function = "inverse")
+@
+
+
+%' << echo = FALSE >>=
+%' plot(quantile_grid,
+%'      true_hi_fun(quantile_grid),
+%'      pch = ".",
+%'      main = "true ADRF",
+%'      xlab = "treat",
+%'      ylab = "Y",
+%'      col = "black")
+%'
+%' lines(quantile_grid,
+%'       true_hi_fun(quantile_grid),
+%'       col = "black",
+%'       lty = 1,
+%'       lwd = 2)
+%'
+%' lines(quantile_grid,
+%'       add_spl_estimate$param,
+%'       lty = 2,
+%'       col = "red",
+%'       lwd = 2)
+%'
+%' lines(quantile_grid,
+%'       gam_estimate$param,
+%'       lty = 3,
+%'       col = "orange",
+%'       lwd = 2)
+%'
+%' lines(quantile_grid,
+%'       hi_estimate$param,
+%'       lty = 4,
+%'       col = "green",
+%'       lwd = 2)
+%'
+%' lines(quantile_grid,
+%'       iptw_estimate$param[1] +
+%'         iptw_estimate$param[2] * quantile_grid +
+%'         iptw_estimate$param[3] * quantile_grid^2,
+%'       lty = 5,
+%'       col = "blue",
+%'       lwd = 2)
+%'
+%' legend('bottomright',
+%'        "reg estimate",
+%'        lty= c(1, 2, 3, 4, 5),
+%'        lwd = c(2, 2, 2, 2, 2),
+%'        col = c("black", "red", "orange", "green", "blue"),
+%'        c("true ADRF", "additive spline", "generalized additive", "Hirano-Imbens", "importance sampling"),
+%'        bty='Y',
+%'        cex=0.75)
+%' @
+The true ADRF and 4 estimates are plotted in Figure \ref{fig:HI_sim}.
+
+\begin{figure}
+\begin{center}
+\includegraphics[scale=.55]{HI_sim_10292015_np.png}
+\end{center}
+\caption{True ADRF along with estimated curves.}\label{fig:HI_sim}
+\end{figure}
+\newpage
+
+
+\section{Analysis of the National Medical Expenditures Survey} \label{section:NMES_analysis}
+
+\subsection{Introduction}
+The 1987 National Medical Expenditures Survey (NMES) includes information about
+smoking amount, in terms of the quantity packyears, and medical expenditures in
+a representative sample of the U.S. civilian, non-institutionalized population
+(U.S. Department of Health and Human Services, Public Health service, 1987).
+The 1987 medical costs were verified by multiple interviews and other data from
+clinicians and hospitals.
+
+\cite{johnson2003disease} analyzed the NMES to estimate the fraction of disease
+cases and the fraction of the total medical expenditures attributable to
+smoking for two disease groups.  \cite{imai2004causal} emulate the setting by
+\cite{johnson2003disease} but estimated the effect of smoking amount on medical
+expenditures.  \cite{johnson2003disease} and \cite{imai2004causal} conducted
+a complete case analysis by removing units containing missing values.  Both
+\cite{johnson2003disease} used multiple imputation techniques to deal with the
+missing values, but did not find significant differences between that analysis
+and the complete case analysis.  Complete case analysis with propensity scores
+will lead to biased causal inference unless the data are missing completely at
+random \citep{d2000estimating}.  Regardless of this drawback, the analysis in
+this section uses the complete case data to illustrate the different
+statistical methods available for estimating the ADRF relating smoking amount
+and medical expenditures.
+
+
+
+
+
+This example is analyzed in this section because the treatment variable,
+smoking amount, is a continuous variable.  The data is restricted to that used
+in \cite{imai2004causal} with 9708 observations and 12 variables.  For each
+person interviewed, the survey collected information on age at the time of the
+survey, age when the person started smoking, gender, race (white, black, other),
+marital status (married, widowed, divorced, separated, never married),
+education level (college graduate, some college, high school graduate, other),
+census region (Northeast, Midwest, South, or West), poverty status (poor, near
+poor, low income, middle income, high income), and seat belt usage (rarely,
+sometimes, always/almost always) \citep{imai2004causal}.  The data is available
+in the \texttt{causaldrf} package.
+
+
+
+
+Our goal is to understand how the amount of smoking affects the amount of
+medical expenditures.  \cite{johnson2003disease} use a measure of cumulative
+exposure to smoking that combines self-reported information about frequency and
+duration of smoking into a variable called \textit{packyear}
+\begin{equation} \label{eq:packyear}
+packyear = \frac{\text{number of cigarettes per day}}{20} \times \text{(number of years smoked)}
+\end{equation}
+\textit{packyear} can also be defined as the number of packs smoked per day
+multiplied by the number of years the person was a smoker. The total number of
+cigarettes per pack is normally 20.
+
+Determining the effect of smoking on health has a long history.  Scientists
+cannot ethically assign smoking amounts randomly to people because of the
+potential negative effects, so observational data analysis is needed to
+understand the relationship.  The rest of this section will focus on the
+relationship between smoking amount and medical expenditures.
+
+The NMES oversampled subgroups of the population in order to reduce variances
+of the estimates.  Oversampling reduces the variances of the estimates by
+increasing the sample size of the target sub-population disproportionately
+\citep{singhoversampling}.  The U.S. Department of Health and Human Services
+oversampled Blacks, Hispanics, the poor and near poor, and the elderly and
+persons with functional limitations \citep{cohen2000sample}.
+
+
+\subsection{Data}
+
+<<echo=FALSE>>=
+load("nmes_10192015.RData")
+@
+Load {\bf nmes\_data} into the workspace with
+<<>>=
+data("nmes_data")
+dim (nmes_data)
+summary(nmes_data)
+@
+The dataset {\bf nmes\_data} is a data frame with 9708 rows and
+12 variables with summaries of the variables given above.
+Six of the variables are numeric and the other six are categorical.  The outcome
+variable is the total amount of medical expenditures, \code{TOTALEXP}, the treatment
+is the amount of smoking, \code{packyears}.  The data set contains weights,
+\code{HSQACCWT}, that can be used to upweight estimates to the population of
+interest which is the set of people who smoke and above the age of 18.  This
+analysis demonstrates the capability of \pkg{causaldrf} by estimating the ADRF
+with and without weights.
+In Figure \ref{fig:nmes_plots}, we plot the estimated ADRFs, their 95\% confidence
+bands, and the 95\% confidence bands without weigths.
+
+
+
+
+\subsection{Common support}
+
+The data set is restricted to observations that overlap and have a common
+support.  Units outside of the common support are removed.
+See Figure \ref{fig:overlap_balance}.  The preliminary steps of analysis
+are omitted such as cleaning and making sure the data overlap.
+
+From \cite{bia2014stata}, we use the formula
+$$CS = \cap^{K}_{q=1} \{i: \hat{R}_{i}^{q} \in [max\{min_{j:Q_{j} = q}\hat{R}_{j}^{q}, min_{j:Q_{j} \neq q}\hat{R}_{j}^{q}\},
+min\{max_{j:Q_{j} = q}\hat{R}_{j}^{q}, max_{j:Q_{j} \neq q}\hat{R}_{j}^{q}\}]\}$$
+to get the common support.  For 3 subclasses, the sample is reduced to 8732
+units in the common support.
+
+\begin{figure}
+\begin{minipage}[t]{0.45\textwidth}
+\includegraphics[scale=0.25]{nmes_overlap_a_10022015.png}
+\label{fig:overlap_1_all}
+\end{minipage}
+\hspace{\fill}
+\begin{minipage}[t]{0.45\textwidth}
+\includegraphics[scale=0.25]{nmes_overlap_b_10022015.png}
+\label{fig:overlap_1_removed}
+\end{minipage}
+
+\vspace*{0.4cm} % (or whatever vertical separation you prefer)
+\begin{minipage}[t]{0.45\textwidth}
+\includegraphics[scale=0.25]{nmes_overlap_c_10022015.png}
+\label{fig:overlap_2_all}
+\end{minipage}
+\hspace{\fill}
+\begin{minipage}[t]{0.45\textwidth}
+\includegraphics[scale=0.25]{nmes_overlap_d_10022015.png}
+\label{fig:overlap_2_removed}
+\end{minipage}
+
+\vspace*{0.4cm} % (or whatever vertical separation you prefer)
+\begin{minipage}[t]{0.45\textwidth}
+\includegraphics[scale=0.25]{nmes_overlap_e_10022015.png}
+\label{fig:overlap_3_all}
+\end{minipage}
+\hspace{\fill}
+\begin{minipage}[t]{0.45\textwidth}
+\includegraphics[scale=0.25]{nmes_overlap_f_10022015.png}
+\label{fig:overlap_3_removed}
+\end{minipage}
+\caption{\footnotesize Common support restriction.
+Shaded bars represent units not in tercile, while
+white bars represent units in the tercile.  (a) Compares group 1 vs
+others before deleting non-overlapping units.  (b) Compares group 1 vs others
+after deleting non-overlapping units.  (c) Compares group 2 vs others before
+deleting non-overlapping units.  (d) Compares group 2 vs others after deleting
+non-overlapping units.  (e) Compares group 3 vs others before deleting
+non-overlapping units.  (f) Compares group 3 vs others after deleting
+non-overlapping units.  }
+\label{fig:overlap_balance}
+\end{figure}
+
+
+\subsection{Covariate balance}
+One of the main goals of fitting a treatment
+model is to balance the covariates.  The GPS
+or the PF provide a way to balance the covariates.
+Comparisons of the balance of the covariates before
+and after adjusting for the GPS or the PF
+are shown in the following results:
+<<>>=
+t(p_val_bal_cond)
+t(p_val_bal_no_cond)
+@
+
+The last column displays the p-value of regressing
+each of the continuous covariates on the
+outcome variable, packyears,
+before and after conditioning on the PF.
+The first three rows show the p-values after
+conditioning on the PF, while the last three
+rows show the p-values when there is no
+conditioning.
+
+
+\subsection{Estimating the ADRF}
+
+The \texttt{causaldrf} R package contains a variety of estimators.
+Below is code for 4 other estimators that can account for weights.
+Although the true ADRF is not a polynomial, we will illustrate methods
+that are restricted to polynomial form of up to degree 2.
+
+The prima facie estimator is a basic estimator that regresses the outcome
+\code{Y} on the treatment \code{T} without taking covariates into account.
+The prima facie estimator is unbiased if the data comes from a simple random
+sample; otherwise it will likely be biased.  The model fit is
+$Y \sim \alpha_0 + \alpha_1 t + \alpha_2 t^2$.
+
+<<>>=
+pf_estimate <- reg_est(Y = TOTALEXP,
+                       treat = packyears,
+                       covar_formula = ~ 1,
+                       data = full_data_orig,
+                       degree = 2,
+                       wt = full_data_orig$HSQACCWT,
+                       method = "same")
+pf_estimate
+@
+
+The regression prediction method generalizes the prima facie estimator
+and takes the covariates into account
+\citep{schafer2015causal}.
+
+<<>>=
+reg_estimate <- reg_est(Y = TOTALEXP,
+                        treat = packyears,
+                        covar_formula = ~ LASTAGE + LASTAGE2 +
+                          AGESMOKE + AGESMOKE2 + MALE + beltuse +
+                          educate + marital + POVSTALB + RACE3,
+                        covar_lin_formula = ~ 1,
+                        covar_sq_formula = ~ 1,
+                        data = full_data_orig,
+                        degree = 2,
+                        wt = full_data_orig$HSQACCWT,
+                        method = "different")
+reg_estimate
+@
+
+The propensity spline prediction method adds spline basis terms to the
+regression prediction method.  This method is similar to that of
+\cite{little2004robust} and \cite{schafer2008average}, but for the continuous
+treatment setting \citep{schafer2015causal}.
+
+<<>>=
+spline_estimate <- prop_spline_est(Y = TOTALEXP,
+                                   treat = packyears,
+                                   covar_formula = ~ LASTAGE + LASTAGE2 +
+                                     AGESMOKE + AGESMOKE2 + MALE + beltuse +
+                                     educate + marital + POVSTALB + RACE3,
+                                   covar_lin_formula = ~ 1,
+                                   covar_sq_formula = ~ 1,
+                                   data = full_data_orig,
+                                   e_treat_1 = full_data_orig$est_treat,
+                                   degree = 2,
+                                   wt = full_data_orig$HSQACCWT,
+                                   method = "different",
+                                   spline_df = 5,
+                                   spline_const = 4,
+                                   spline_linear = 4,
+                                   spline_quad = 4)
+spline_estimate
+@
+
+This last method fits a spline basis to the estimated PF values and then regresses
+the outcome on both the basis terms and the treatment to estimate the ADRF.
+This is described in \cite{imai2004causal} and \cite{schafer2015causal}.
+The estimated parameters
+correspond to coefficients for a quadratic model of the form
+$\hat{\mu}(t) = \hat{\alpha}_0 + \hat{\alpha}_1 t + \hat{\alpha}_2 t^2$.
+
+<<>>=
+ivd_estimate <- prop_spline_est(Y = TOTALEXP,
+                                treat = packyears,
+                                covar_formula = ~ 1,
+                                covar_lin_formula = ~ 1,
+                                covar_sq_formula = ~ 1,
+                                data = full_data_orig,
+                                e_treat_1 = full_data_orig$est_treat,
+                                degree = 2,
+                                wt = full_data_orig$HSQACCWT,
+                                method = "different",
+                                spline_df = 5,
+                                spline_const = 4,
+                                spline_linear = 4,
+                                spline_quad = 4)
+ivd_estimate
+@
+
+
+
+\begin{figure}
+\begin{minipage}[t]{0.45\textwidth}
+\includegraphics[width=1\linewidth]{nmes_pf_10222015_wt.png}
+%\caption{\textit{Histogram of lottery prize}}
+\label{fig:nmes_pf_10222015_wt}
+\end{minipage}
+\hspace{\fill}
+\begin{minipage}[t]{0.45\textwidth}
+\includegraphics[width=1\linewidth]{nmes_reg_10222015_wt.png}
+%\caption{\textit{Histogram of log(lottery prize}}
+\label{fig:nmes_reg_10222015_wt}
+\end{minipage}
+
+\vspace*{0.5cm} % (or whatever vertical separation you prefer)
+\begin{minipage}[t]{0.45\textwidth}
+\includegraphics[width=1\linewidth]{nmes_spline_10222015_wt.png}
+%\caption{\textit{QQ plot of \texttt{log\_prize} $ \sim \bX$}}
+\label{fig:nmes_spline_10222015_wt}
+\end{minipage}
+\hspace{\fill}
+\begin{minipage}[t]{0.45\textwidth}
+\includegraphics[width=1\linewidth]{nmes_ivd_11062015_wt.png}
+%\caption{\textit{Residuals of the \texttt{log\_prize} regressed on $\bX$}}
+\label{fig:nmes_ivd_10222015_wt}
+\end{minipage}
+\caption{\footnotesize Estimated dose-response functions using 4 different
+methods with 95\% pointwise standard errors. The standard errors are estimated
+by bootstrapping the entire estimation process from the beginning.}
+\label{fig:nmes_plots}
+
+\end{figure}
+
+\clearpage
+
+
+
+%\subsubsubsection{Other estimators}
+
+\subsection{Discussion}
+
+
+These four methods estimate the ADRF in a structured way and assumes the
+true ADRF is a linear combination of a finite number of basis functions.
+Figure \ref{fig:nmes_plots} shows an overall rising amount of
+\code{TOTALEXP} as \code{packyear} increases.
+Recall that in this example, the four estimators are restricted to fitting
+the ADRF as a polynomial of up to degree 2.  Fitting more flexible models
+may give slightly different curves.
+The next section analyzes a different data set and will fit other
+flexible estimators such as BART, which allows for flexible response surfaces
+to estimate the ADRF.
+
+
+\section{Analysis of the Infant Health and Development Program} \label{section:IHDP_analysis}
+
+\subsection{Introduction}
+The next example on the Infant Health and Development Program is
+described by \cite{gross1992infant}:
+\begin{quotation}
+The Infant Health and Development Program (IHDP) was a collaborative,
+randomized, longitudinal, multisite clinical trial designed to evaluate the
+efficacy of comprehensive early intervention in reducing the developmental and
+health problems of low birth weight, premature infants. An intensive
+intervention extending from hospital discharge to 36 months corrected age was
+administered between 1985 and 1988 at eight different sites. The study sample
+of infants was stratified by birth weight
+(2,000 grams or less, 2,001-2,500 grams) and randomized to the Intervention
+Group or the Follow-Up Group.
+\end{quotation}
+The intervention (treatment) group received more support than
+the control group.  In addition to the standard pediatric follow-up, the
+treatment group also received home visits and attendance at a special child
+development center.  Although the treatment was assigned randomly, families
+chosen for the intervention self-selected into different participation levels
+\citep{hill2011bayesian}.  Therefore, restricting our analysis to families in
+the intervention group and their participation levels leads to an observational
+setting.
+
+In this section, even though families are randomly selected for intervention,
+we restrict our analysis on those selected for the treatment.  These families
+choose the amount of days they attend the child development centers and this
+makes the data set, for practical purposes, an observational data set.  We
+apply our methods on this subset of the data to estimate the ADRF for those
+who received the treatment.
+
+We analyze this data set because the treatment variable, number of child
+development center days, is analyzed as a continuous variable.  The data set
+we use comes from \cite{hill2011bayesian}.
+
+\subsection{Data}
+
+Part of this data set is included in the supplement in \cite{hill2011bayesian},
+but does not
+include all the needed variables.  The continuous treatment is available
+through the data repository at \url{icpsr.umich.edu}.  To get the data, go to
+\url{http://www.icpsr.umich.edu/icpsrweb/HMCA/studies/9795?paging.startRow=51}
+and download DS141: Transport Format SAS Library Containing the 59 Evaluation
+Data Files	- Download All Files (27.9 MB).  After downloading the .zip file,
+extract the data file named \quotes{09795-0141-Data-card\_image.xpt} to a folder
+and set the R working directory to this folder.  The following instructions
+describe how to extract the continuous treatment variable.
+
+Making sure the working directory contains \quotes{09795-0141-Data-card\_image.xpt},
+the next step is to load the \pkg{Hmisc} package to read sas export files.
+<< eval = FALSE, echo = TRUE >>=
+library(Hmisc)
+mydata <- sasxport.get("09795-0141-Data-card_image.xpt")
+data_58 <- mydata[[58]]
+ihdp_raw <- data_58
+# restricts data to treated cases
+treated_raw <- ihdp_raw[which(ihdp_raw$tg == "I"),]
+# continuous treatment variable
+treat_value <- treated$cdays.t
+@
+The continuous treatment variable is merged with the data given in the
+supplement by \cite{hill2011bayesian} to create the data set for this section.
+
+A few more steps are needed to clean and recode the data.
+We collect a subset of families eligible for the
+intervention and restrict the data set to families that use the child
+development centers at least once.  The data set contains the outcome variable,
+\code{iqsb.36}, which is the measured iq of the child at 36 months.  The
+treatment variable is the number of days the child attended the child development
+center divided by 100, \code{ncdctt} (i.e. \code{ncdctt} $= 1.5$ means $150$ days
+in the child developement center).
+We select the covariates using a stepwise procedure
+to simplify the analysis.
+
+
+
+\subsection{Common support}
+
+
+<< eval = FALSE, echo = TRUE >>=
+overlap_temp <- overlap_fun(Y = iqsb.36,
+                            treat = ncdctt,
+                            treat_formula = t_formula,
+                            data = data_set,
+                            n_class = 3,
+                            treat_mod = "Normal")
+
+median_list <- overlap_temp[[2]]
+overlap_orig <- overlap_temp[[1]]
+overlap_3 <- overlap_temp[[3]]
+fitted_values_overlap <- overlap_3$fitted.values
+@
+
+\subsection{Covariate balance}
+
+Balance is evaluated similarly to the NMES example.
+
+\subsection{Estimating the ADRF}
+The BART estimator fits a rich outcome model on the treatment and covariates
+to create a flexible response surface \citep{hill2011bayesian}.
+The flexible response surface imputes
+the missing potential outcomes.  The estimated potential outcomes are averaged
+to get the estimated ADRF over a grid of treatment values.
+
+
+\begin{figure}
+\begin{minipage}[t]{0.45\textwidth}
+\includegraphics[width=1\linewidth]{ihdp_bart_10212015.png}
+%\caption{\textit{Histogram of lottery prize}}
+\label{fig:ihdp_bart_10212015}
+\end{minipage}
+\hspace{\fill}
+\begin{minipage}[t]{0.45\textwidth}
+\includegraphics[width=1\linewidth]{ihdp_iw_10202015.png}
+%\caption{\textit{Histogram of log(lottery prize}}
+\label{fig:ihdp_hi_10202015}
+\end{minipage}
+
+\vspace*{0.5cm} % (or whatever vertical separation you prefer)
+\begin{minipage}[t]{0.45\textwidth}
+\includegraphics[width=1\linewidth]{ihdp_nw_10202015.png}
+%\caption{\textit{QQ plot of \texttt{log\_prize} $ \sim \bX$}}
+\label{fig:ihdp_ivd_10202015}
+\end{minipage}
+\hspace{\fill}
+\begin{minipage}[t]{0.45\textwidth}
+\includegraphics[width=1\linewidth]{ihdp_prop_spl_10202015.png}
+%\caption{\textit{Residuals of the \texttt{log\_prize} regressed on $\bX$}}
+\label{fig:ihdp_prop_spl_10202015}
+\end{minipage}
+\caption{\footnotesize Estimated dose-response functions using 4 different
+methods with 95\% pointwise standard errors.
+The standard errors are estimated by bootstrapping the entire estimation
+process from the beginning.}
+\label{fig:ihdp_plots}
+
+\end{figure}
+<< eval = FALSE, echo = TRUE >>=
+bart_estimate <-  bart_est(Y = iqsb.36,
+                             treat = ncdctt,
+                             outcome_formula = iqsb.36 ~ ncdctt + bw +
+                             female + mom.lths +
+                             site1 + site7 + momblack +
+                             workdur.imp,
+                             data = full_data_orig,
+                             grid_val = grid_treat)
+@
+
+The next method is described in \cite{flores2012estimating} and uses inverse
+weights to adjust for the covariates.  First a treatment model is fit and
+GPS values are estimated.  This is a method that uses weights to locally
+regress the outcome on nearby points.  This is a local linear regression of the
+outcome, \code{iqsb.36}, on the treatment, \code{ncdctt}, with a weighted
+kernel.  The weighted kernel is weighted by the reciprocal of the GPS values.
+
+<< eval = FALSE, echo = TRUE >>=
+iw_estimate <- iw_est(Y = iqsb.36,
+                       treat = ncdctt,
+                       treat_formula = ncdctt ~ bw + female + mom.lths +
+                        site1 + site7 + momblack +
+                        workdur.imp,
+                       data = full_data_orig,
+                       grid_val = grid_treat,
+                       bandw = 2 * bw.SJ(full_data_orig$ncdctt),
+                       treat_mod = "Normal")
+@
+
+
+This next method, the Nadaraya-Watson based estimator, is similar to the
+inverse weighting method in the previous code chunk, but
+uses a local constant regression.
+<< eval = FALSE, echo = TRUE >>=
+nw_estimate <- nw_est(Y = iqsb.36,
+                      treat = ncdctt,
+                      treat_formula = ncdctt ~ bw + female + mom.lths +
+                        site1 + site7 + momblack +
+                        workdur.imp,
+                      data = full_data_orig,
+                      grid_val = grid_treat,
+                      bandw = 2 * bw.SJ(full_data_orig$ncdctt),
+                      treat_mod = "Normal")
+@
+
+
+The propensity spline estimator is a generalization of the prima facie and
+regression prediction method
+in \cite{schafer2015causal}.  In this example, the estimator is restricted
+to a polynomial of up to degree 2
+of the form
+$\hat{\mu}(t) = \hat{\alpha}_0 + \hat{\alpha}_1 t + \hat{\alpha}_2 t^2$.
+
+<< eval = FALSE, echo = TRUE >>=
+spline_estimate <- prop_spline_est(Y = iqsb.36,
+                                   treat = ncdctt,
+                                   covar_formula = ~ bw + female +
+                                     mom.lths + site1 + site7 +
+                                     momblack + workdur.imp,
+                                   covar_lin_formula = ~ 1,
+                                   covar_sq_formula = ~ 1,
+                                   data = full_data_orig,
+                                   e_treat_1 = full_data_orig$est_treat,
+                                   degree = 2,
+                                   wt = NULL,
+                                   method = "different",
+                                   spline_df = 5,
+                                   spline_const = 2,
+                                   spline_linear = 2,
+                                   spline_quad = 2)
+@
+
+
+
+\subsection{Discussion}
+
+
+The plots in Figure \ref{fig:ihdp_plots} show the estimated relationship of IQ
+at 36 months, \code{iqsb.36}, on number of days in the child
+development care center, \code{ncdctt}.
+The inverse weighting and Nadaraya-Watson show a decreasing trend for
+$\code{ncdctt} \in (0, 0.8)$, but an increasing trend for $\code{ncdctt} > 0.8$.
+These estimators are jagged because of the
+bandwidth selection.  In this example, we use twice the Sheather-Jones bandwidth
+estimate to select the bandwidth.  Picking a larger bandwidth will give smoother
+estimates.
+The BART and propensity spline estimators have a generally increasing trend.
+
+
+\section{Conclusion} \label{section:Discussion_examples}
+
+%  explain what we can do with this newly acquired knowledge.  Answer the question \quotes{so what?}
+
+In this chapter, we have demonstrated how to estimate ADRFs using different statistical techniques
+using the R package \texttt{causaldrf}, both for simulated and real data, by
+correcting for confounding variables.  \texttt{causaldrf} can accommodate a
+wide array of treatment models, is user friendly, and does not require extensive
+programming.  This contribution of the R package \texttt{causaldrf} will make
+ADRF estimation more accessible to applied researchers.  In future updates of
+the package, the functions will be adapted to an even wider range of problems.
+
+
+
+
+
+
+
+
+
+%
+%
+% \section*{Acknowledgments}
+%
+% The author would like to thank colleagues at the University of Maryland,
+% College Park, and U.S. Census Bureau.
+
+\bibliographystyle{apalike}
+\bibliography{Chapter1Ref09212015}
+
+\end{document}

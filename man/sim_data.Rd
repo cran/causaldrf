@@ -3,7 +3,7 @@
 \docType{data}
 \name{sim_data}
 \alias{sim_data}
-\title{Simulated data from Schafer and Galagate (2015).}
+\title{Simulated data from Schafer and Galagate (2015)}
 \format{A data frame with 1000 rows and 20 variables:}
 \source{
 use the \code{draw_sample} function

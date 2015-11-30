@@ -24,6 +24,8 @@ a symbolic description of the model to be fitted.}
 to be used in the model for treatment. Options include:
 \code{"Normal"} for normal model,
 \code{"LogNormal"} for lognormal model,
+\code{"Sqrt"} for square-root transformation
+to a normal treatment,
 \code{"Poisson"} for Poisson model,
 \code{"NegBinom"} for negative binomial model,
 \code{"Gamma"} for gamma model.}

@@ -58,7 +58,8 @@ Default is wt = NULL.}
 \item{method}{is "same" if the same set of covariates are used to estimate
 the constant, linear, and/or quadratic term with no spline terms.  If method = "different", then
 different sets of covariates can be used to estimate the constant, linear,
-and/or quadratic term.  covar_lin_formula and covar_sq_formula must be specified
+and/or quadratic term.  To use spline terms, it is necessary to set
+method = "different".  covar_lin_formula and covar_sq_formula must be specified
 if method = "different".}
 
 \item{spline_df}{degrees of freedom. The default, spline_df = NULL, corresponds to no knots.}
@@ -81,6 +82,11 @@ This method estimates the linear or quadratic parameters of the ADRF by
 estimating a least-squares fit on the basis functions which are composed of
 combinations of the covariates, propensity spline basis, and treatment values.
 }
+\details{
+This function estimates the ADRF by the method described in Schafer and Galagate (2015),
+that fits an outcome model using a function of the covariates and spline basis
+functions derived from the propensity function component.
+}
 \examples{
 ## Example from Schafer (2015).
 
@@ -95,19 +101,19 @@ cond_exp_data <- t_mod_list$T_data
 full_data <- cbind(example_data, cond_exp_data)
 
 prop_spline_list <- prop_spline_est(Y = Y,
-                                    treat = T,
-                                    covar_formula = ~ B.1 + B.2 + B.3 + B.4 + B.5 + B.6 + B.7 + B.8,
-                                    covar_lin_formula = ~ 1,
-                                    covar_sq_formula = ~ 1,
-                                    data = example_data,
-                                    e_treat_1 = full_data$est_treat,
-                                    degree = 1,
-                                    wt = NULL,
-                                    method = "different",
-                                    spline_df = 5,
-                                    spline_const = 4,
-                                    spline_linear = 4,
-                                    spline_quad = 4)
+                            treat = T,
+                            covar_formula = ~ B.1 + B.2 + B.3 + B.4 + B.5 + B.6 + B.7 + B.8,
+                            covar_lin_formula = ~ 1,
+                            covar_sq_formula = ~ 1,
+                            data = example_data,
+                            e_treat_1 = full_data$est_treat,
+                            degree = 1,
+                            wt = NULL,
+                            method = "different",
+                            spline_df = 5,
+                            spline_const = 4,
+                            spline_linear = 4,
+                            spline_quad = 4)
 
 sample_index <- sample(1:1000, 100)
 
@@ -137,6 +143,14 @@ rm(example_data, prop_spline_list, sample_index)
 Schafer, J.L., Galagate, D.L. (2015).  Causal inference with a
 continuous treatment and outcome: alternative estimators for parametric
 dose-response models. \emph{Manuscript in preparation}.
+
+Little, Roderick and An, Hyonggin (2004).  ROBUST LIKELIHOOD-BASED ANALYSIS
+ OF MULTIVARIATE DATA WITH MISSING VALUES. \emph{Statistica Sinica}.
+ \bold{14}: 949--968.
+
+Schafer, Joseph L, Kang, Joseph (2008).  Average causal effects from
+nonrandomized studies: a practical guide and simulated example.
+\emph{Psychological methods}, \bold{13.4}, 279.
 }
 \seealso{
 \code{\link{iptw_est}}, \code{\link{ismw_est}},

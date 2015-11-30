@@ -1,8 +1,8 @@
 ##' The GAM estimator
 ##'
-##' Similar to the HI method, but it has spline basis terms in the outcome model.
-##' It has the same gps fitting scheme as the HI method, but the outcome model relies on a GAM
-##' fit.
+##' This estimates the ADRF using a method similar to that described in Hirano and Imbens (2004),
+##' but with spline basis terms in the outcome model.
+##'
 ##'
 ##'
 ##' @param Y is the the name of the outcome variable contained in \code{data}.
@@ -16,12 +16,19 @@
 ##' @param grid_val contains the treatment values to be evaluated.
 ##' @param treat_mod a description of the error distribution to be used in the
 ##' model for treatment. Options include: \code{"Normal"} for normal model,
-##' \code{"LogNormal"} for lognormal model, \code{"Poisson"} for Poisson model,
+##' \code{"LogNormal"} for lognormal model, \code{"Sqrt"} for square-root transformation
+##' to a normal treatment, \code{"Poisson"} for Poisson model,
 ##' \code{"NegBinom"} for negative binomial model, \code{"Gamma"} for gamma
 ##' model.
 ##' @param link_function is either "log", "inverse", or "identity" for the
 ##' "Gamma" \code{treat_mod}.
 ##' @param ... additional arguments to be passed to the gam() outcome function.
+##'
+##' @details
+##' This function estimates the ADRF similarly to the method described by
+##' Hirano and Imbens (2004), but with a generalized additive model in the outcome
+##' model.
+##'
 ##'
 ##' @return \code{gam_est} returns an object of class "causaldrf",
 ##' a list that contains the following components:
@@ -40,6 +47,15 @@
 ##' @references Schafer, J.L., Galagate, D.L. (2015).  Causal inference with a
 ##' continuous treatment and outcome: alternative estimators for parametric
 ##' dose-response models. \emph{Manuscript in preparation}.
+##'
+##' Hirano, Keisuke, Imbens, Guido W (2004).  The propensity score with
+##' continuous treatments.  \emph{Applied Bayesian modeling and
+##' causal inference from incomplete-data perspectives.}
+##'
+##' Flores, Carlos A and Flores-Lagunes, Alfonso and Gonzalez, Arturo and Neumann, Todd C (2012).
+##' Estimating the effects of length of
+##' exposure to instruction in a training program: the case of job corps.
+##' \emph{Review of Economics and Statistics}. \bold{94.1}, 153-171
 ##'
 ##'
 ##' @examples
@@ -126,7 +142,7 @@ gam_est <- function(Y,
   if (!("treat" %in% names(tempcall)))  stop("No treat variable specified")
   if (!("data" %in% names(tempcall))) stop("No data specified")
   if (!("grid_val" %in% names(tempcall)))  stop("No grid_val specified")
-  if (!("treat_mod" %in% names(tempcall)) | ("treat_mod" %in% names(tempcall) & !(tempcall$treat_mod %in% c("NegBinom", "Poisson", "Gamma", "LogNormal", "Normal")))) stop("No valid family specified (\"NegBinom\", \"Poisson\", \"Gamma\", \"Log\", \"Normal\")")
+  if (!("treat_mod" %in% names(tempcall)) | ("treat_mod" %in% names(tempcall) & !(tempcall$treat_mod %in% c("NegBinom", "Poisson", "Gamma", "LogNormal", "Sqrt", "Normal")))) stop("No valid family specified (\"NegBinom\", \"Poisson\", \"Gamma\", \"Log\",  \"Sqrt\", \"Normal\")")
   if (tempcall$treat_mod == "Gamma") {if(!(tempcall$link_function %in% c("log", "inverse"))) stop("No valid link function specified for family = Gamma (\"log\", \"inverse\")")}
   if (tempcall$treat_mod == "binomial") {if(!(tempcall$link_function %in% c("logit", "probit", "cauchit", "log", "cloglog"))) stop("No valid link function specified for family = binomial (\"logit\", \"probit\", \"cauchit\", \"log\", \"cloglog\")")}
   if (tempcall$treat_mod == "ordinal" ) {if(!(tempcall$link_function %in% c("logit", "probit", "cauchit", "cloglog"))) stop("No valid link function specified for family = ordinal (\"logit\", \"probit\", \"cauchit\", \"cloglog\")")}
@@ -192,6 +208,18 @@ gam_est <- function(Y,
       dnorm(log(tt), mean = est_log_treat, sd = sigma_est)
     }
     gps_fun <- gps_fun_Log
+  }
+  else if (treat_mod == "Sqrt") {
+
+    samp_dat <- data
+    samp_dat[, as.character(tempcall$treat)] <- sqrt(samp_dat[, as.character(tempcall$treat)])
+    result <- lm(formula = formula_t, data = samp_dat)
+    est_sqrt_treat <- result$fitted
+    sigma_est <- summary(result)$sigma
+    gps_fun_sqrt <- function(tt) {
+      dnorm(sqrt(tt), mean = est_sqrt_treat, sd = sigma_est)
+    }
+    gps_fun <- gps_fun_sqrt
   }
   else if (treat_mod == "Normal") {
     samp_dat <- data

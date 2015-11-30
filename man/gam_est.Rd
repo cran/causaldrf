@@ -30,7 +30,8 @@ of \code{X}: a symbolic description of the model to be fitted.}
 
 \item{treat_mod}{a description of the error distribution to be used in the
 model for treatment. Options include: \code{"Normal"} for normal model,
-\code{"LogNormal"} for lognormal model, \code{"Poisson"} for Poisson model,
+\code{"LogNormal"} for lognormal model, \code{"Sqrt"} for square-root transformation
+to a normal treatment, \code{"Poisson"} for Poisson model,
 \code{"NegBinom"} for negative binomial model, \code{"Gamma"} for gamma
 model.}
 
@@ -48,9 +49,13 @@ a list that contains the following components:
 \item{call}{the matched call.}
 }
 \description{
-Similar to the HI method, but it has spline basis terms in the outcome model.
-It has the same gps fitting scheme as the HI method, but the outcome model relies on a GAM
-fit.
+This estimates the ADRF using a method similar to that described in Hirano and Imbens (2004),
+but with spline basis terms in the outcome model.
+}
+\details{
+This function estimates the ADRF similarly to the method described by
+Hirano and Imbens (2004), but with a generalized additive model in the outcome
+model.
 }
 \examples{
 ## Example from Schafer (2015).
@@ -92,6 +97,15 @@ rm(example_data, gam_list, sample_index)
 Schafer, J.L., Galagate, D.L. (2015).  Causal inference with a
 continuous treatment and outcome: alternative estimators for parametric
 dose-response models. \emph{Manuscript in preparation}.
+
+Hirano, Keisuke, Imbens, Guido W (2004).  The propensity score with
+continuous treatments.  \emph{Applied Bayesian modeling and
+causal inference from incomplete-data perspectives.}
+
+Flores, Carlos A and Flores-Lagunes, Alfonso and Gonzalez, Arturo and Neumann, Todd C (2012).
+Estimating the effects of length of
+exposure to instruction in a training program: the case of job corps.
+\emph{Review of Economics and Statistics}. \bold{94.1}, 153-171
 }
 \seealso{
 \code{\link{nw_est}}, \code{\link{iw_est}}, \code{\link{hi_est}}, \code{\link{gam_est}},

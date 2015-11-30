@@ -1,7 +1,7 @@
-#' The weighted regression method
+#' The weighted regression estimator
 #'
 #' This method uses weight matrices to
-#' estimate parameters for the quadratic or linear fits.
+#' estimate parameters for an ADRF with quadratic or linear fits.
 #'
 #'
 #' @param Y is the output
@@ -13,6 +13,10 @@
 #' @param e_treat_3 is estimated treatment cubed
 #' @param e_treat_4 is estimated treatment to the fourth
 #' @param degree is 1 for linear fit and 2 for quadratic fit
+#'
+#' @details
+#' This function estimates the ADRF by the method described in Schafer and Galagate (2015)
+#' which uses weight matrices to adjust for possible bias.
 #'
 #' @return \code{wtrg_est} returns an object of class "causaldrf",
 #' a list that contains the following components:

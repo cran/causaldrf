@@ -1,4 +1,4 @@
-##' The inverse probability of treatment weighting (iptw) method
+##' The inverse probability of treatment weighting (iptw) estimator
 ##'
 ##' The iptw method or importance weighting method estimates the ADRF by
 ##' weighting the data with stabilized or non-stabilized weights.
@@ -19,7 +19,8 @@
 ##' @param degree is 1 for linear and 2 for quadratic outcome model.
 ##' @param treat_mod a description of the error distribution to be used in the
 ##' model for treatment. Options include: \code{"Normal"} for normal model,
-##' \code{"LogNormal"} for lognormal model, \code{"Poisson"} for Poisson model,
+##' \code{"LogNormal"} for lognormal model, \code{"Sqrt"} for square-root transformation
+##' to a normal treatment, \code{"Poisson"} for Poisson model,
 ##' \code{"NegBinom"} for negative binomial model, \code{"Gamma"} for gamma
 ##' model, \code{"Binomial"} for binomial model, \code{"Ordinal"} for ordinal model,
 ##' \code{"Multinomial"} for multinomial model.
@@ -32,6 +33,14 @@
 ##' For \code{treat_mod = "Ordinal"} (fitted using polr) alternatives are "logit", "probit", "cauchit", and "cloglog".
 ##'
 ##' @param ...	additional arguments to be passed to the low level treatment regression fitting functions.
+##'
+##' @details
+##' This method uses inverse probability of treatment weighting to adjust
+##' for possible biases.  For more details see Schafer and Galagate (2015) and
+##' Robins, Hernan, and Brumback (2000).
+##'
+##'
+##'
 ##'
 ##' @return \code{iptw_est} returns an object of class "causaldrf",
 ##' a list that contains the following components:
@@ -60,6 +69,17 @@
 ##' van der Wal, Willem M., and Ronald B. Geskus.
 ##' "IPW: an R package for inverse probability weighting."
 ##' \emph{Journal of Statistical Software} \bold{43.13} (2011): 1-23.
+##'
+##' Robins, James M and Hernan, Miguel Angel and Brumback, Babette.
+##' Marginal structural models and causal inference in epidemiology.
+##' \emph{Epidemiology} \bold{11.5} (2000): 550--560.
+##'
+##' Zhu, Yeying and Coffman, Donna L and Ghosh, Debashis.
+##' A Boosting Algorithm for Estimating Generalized Propensity Scores
+##' with Continuous Treatments.
+##' \emph{Journal of Causal Inference} \bold{3.1} (2015): 25--40.
+##'
+##'
 ##'
 ##' @examples
 ##'
@@ -179,7 +199,7 @@ iptw_est <- function (Y,
   if (!("data" %in% names(tempcall))) stop("No data specified")
   if (!("degree" %in% names(tempcall)))  {if(!(tempcall$degree %in% c(1, 1))) stop("degree must be 1 or 2")}
   if (!("treat_mod" %in% names(tempcall)) | ("treat_mod" %in% names(tempcall) &
-                                             !(tempcall$treat_mod %in% c("NegBinom", "Poisson", "Gamma", "LogNormal", "Normal", "Binomial", "Ordinal", "Multinomial")))) stop("No valid family specified (\"NegBinom\", \"Poisson\", \"Gamma\", \"Log\", \"Binomial\", \"Ordinal\", \"Multinomial\", \"Normal\")")
+                                             !(tempcall$treat_mod %in% c("NegBinom", "Poisson", "Gamma", "LogNormal", "Sqrt", "Normal", "Binomial", "Ordinal", "Multinomial")))) stop("No valid family specified (\"NegBinom\", \"Poisson\", \"Gamma\", \"Log\", \"Sqrt\", \"Binomial\", \"Ordinal\", \"Multinomial\", \"Normal\")")
   if (tempcall$treat_mod == "Gamma") {if(!(tempcall$link_function %in% c("log", "inverse"))) stop("No valid link function specified for family = Gamma (\"log\", \"inverse\")")}
   if (tempcall$treat_mod == "NegBinom") {if(!(tempcall$link_function %in% c("log", "inverse"))) stop("No valid link function specified for family = NegBinom (\"log\", \"inverse\")")}
   if (tempcall$treat_mod == "Binomial") {if(!(tempcall$link_function %in% c("logit", "probit", "cauchit", "log", "cloglog"))) stop("No valid link function specified for family = binomial (\"logit\", \"probit\", \"cauchit\", \"log\", \"cloglog\")")}
@@ -247,6 +267,19 @@ iptw_est <- function (Y,
 
     samp <- data
     samp[, as.character(tempcall$treat)] <- log(samp[, as.character(tempcall$treat)])
+    result2 <- lm(formula_t, data = samp, ...)
+    samp$gps_vals <- dnorm(samp[, as.character(tempcall$treat)], mean = result2$fitted,
+                           sd = summary(result2)$sigma)
+
+    result1 <- lm(numerator_formula, data = samp, ...)
+    samp$num_weight <- dnorm(samp[, as.character(tempcall$treat)], mean = result1$fitted,
+                             sd = summary(result1)$sigma)
+    est_import_wt <- samp$num_weight/samp$gps_vals
+  }
+  else if (treat_mod == "Sqrt") {
+
+    samp <- data
+    samp[, as.character(tempcall$treat)] <- sqrt(samp[, as.character(tempcall$treat)])
     result2 <- lm(formula_t, data = samp, ...)
     samp$gps_vals <- dnorm(samp[, as.character(tempcall$treat)], mean = result2$fitted,
                            sd = summary(result2)$sigma)

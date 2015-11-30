@@ -2,7 +2,7 @@
 % Please edit documentation in R/iptw_est.R
 \name{iptw_est}
 \alias{iptw_est}
-\title{The inverse probability of treatment weighting (iptw) method}
+\title{The inverse probability of treatment weighting (iptw) estimator}
 \usage{
 iptw_est(Y,
          treat,
@@ -36,7 +36,8 @@ of \code{X}: a symbolic description of the model to be fitted.  i.e.
 
 \item{treat_mod}{a description of the error distribution to be used in the
 model for treatment. Options include: \code{"Normal"} for normal model,
-\code{"LogNormal"} for lognormal model, \code{"Poisson"} for Poisson model,
+\code{"LogNormal"} for lognormal model, \code{"Sqrt"} for square-root transformation
+to a normal treatment, \code{"Poisson"} for Poisson model,
 \code{"NegBinom"} for negative binomial model, \code{"Gamma"} for gamma
 model, \code{"Binomial"} for binomial model, \code{"Ordinal"} for ordinal model,
 \code{"Multinomial"} for multinomial model.}
@@ -65,6 +66,11 @@ a list that contains the following components:
 \description{
 The iptw method or importance weighting method estimates the ADRF by
 weighting the data with stabilized or non-stabilized weights.
+}
+\details{
+This method uses inverse probability of treatment weighting to adjust
+for possible biases.  For more details see Schafer and Galagate (2015) and
+Robins, Hernan, and Brumback (2000).
 }
 \examples{
 ## Example from Schafer (2015).
@@ -134,6 +140,15 @@ dose-response models. \emph{Manuscript in preparation}.
 van der Wal, Willem M., and Ronald B. Geskus.
 "IPW: an R package for inverse probability weighting."
 \emph{Journal of Statistical Software} \bold{43.13} (2011): 1-23.
+
+Robins, James M and Hernan, Miguel Angel and Brumback, Babette.
+Marginal structural models and causal inference in epidemiology.
+\emph{Epidemiology} \bold{11.5} (2000): 550--560.
+
+Zhu, Yeying and Coffman, Donna L and Ghosh, Debashis.
+A Boosting Algorithm for Estimating Generalized Propensity Scores
+with Continuous Treatments.
+\emph{Journal of Causal Inference} \bold{3.1} (2015): 25--40.
 }
 \seealso{
 \code{\link{iptw_est}}, \code{\link{ismw_est}},

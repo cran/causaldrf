@@ -36,10 +36,35 @@ a list that contains the following components:
 \item{call}{the matched call.}
 }
 \description{
-This function estimates the ADRF using bart.
+This function estimates the ADRF using Bayesian additive regression trees (BART).
 }
 \details{
-The mean DRF is estimated
+BART is a prediction model that is applicable to many settings, one of which
+ is causal inference problems.  It is a sum of trees fit, but the influence
+  of each tree is held back by a regularization prior so that each tree only
+   contributes a small amount to the overall fit.  Priors are put on the
+   parameters to avoid overfitting the data and so that no single tree has
+    a significant influence on the model fit.
+     For more details see Chipman (2010).
+
+BART does not require fitting a treatment model.  Instead, it fits a
+response surface to the whole dataset and if the response surface is
+correctly specified, then the causal effect estimate is unbiased.
+Although most of the focus on BART is for the binary treatment setting,
+ Hill (2011) also mentions an extension to the continuous or
+  multidose treatment setting.  When using BART in this continuous treatment
+   setting, Hill (2011) compares the outcomes of units with
+   treatment level \eqn{T_i = t} to their outcomes had \eqn{T_i = 0}.
+   This method infers the treatment effect of units had they not received
+   treatment compared to their actual observed treatment.  The comparison
+   is between \eqn{Y_i(0)| (I = 1, T_i = t)} and \eqn{Y_i(t)| (I = 1, T_i = t)}
+   where \eqn{I = 1} means that the unit is part of the treatment group.
+   The causal effect is comparing the predicted outcome of units that
+   received treatment with what their predicted outcome would have been
+   had they received zero treatment.
+
+   This method performs well in simulation studies.
+   One drawback from BART is the amount of computing time needed.
 }
 \examples{
 ## Example from Schafer (2015).  bart takes a few minutes to run (depending on computer).
@@ -87,6 +112,11 @@ dose-response models. \emph{Manuscript in preparation}.
 Hill, Jennifer L. (2011). Bayesian nonparametric modeling for causal
 inference. \emph{Journal of Computational and Graphical Statistics}
 \bold{20.1} (2011).
+
+Chipman, Hugh A and George, Edward I and McCulloch, Robert E and others (2010).
+BART: Bayesian additive regression trees.
+\emph{The Annals of Applied Statistics}
+\bold{4.1}, 266--298.
 }
 \seealso{
 \code{\link{nw_est}}, \code{\link{iw_est}}, \code{\link{hi_est}}, \code{\link{gam_est}},

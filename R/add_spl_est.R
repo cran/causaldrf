@@ -1,6 +1,7 @@
 ##' The additive spline estimator
 ##'
-##' additive spline estimator described in Bia et al. (2014).
+##' This function estimates the ADRF with an additive spline estimator described
+##' in Bia et al. (2014).
 ##'
 ##'
 ##' @param Y is the the name of the outcome variable contained in \code{data}.
@@ -15,13 +16,16 @@
 ##' @param knot_num is the number of knots used in outcome model
 ##' @param treat_mod a description of the error distribution to be used in the
 ##' model for treatment. Options include: \code{"Normal"} for normal model,
-##' \code{"LogNormal"} for lognormal model, \code{"Poisson"} for Poisson model,
+##' \code{"LogNormal"} for lognormal model, \code{"Sqrt"} for square-root transformation
+##' to a normal treatment, \code{"Poisson"} for Poisson model,
 ##' \code{"NegBinom"} for negative binomial model, \code{"Gamma"} for gamma
 ##' model.
 ##' @param link_function is either "log", "inverse", or "identity" for the
 ##' "Gamma" \code{treat_mod}.
 ##' @param ...	additional arguments to be passed to the outcome regression fitting function.
 ##'
+##' @details This function estimates the ADRF using additive splines in the
+##' outcome model described in Bia et al. (2014).
 ##'
 ##' @return \code{add_spl_est}  returns an object of class "causaldrf",
 ##' a list that contains the following components:
@@ -133,7 +137,7 @@ add_spl_est <- function(Y,
   if (!("treat_formula" %in% names(tempcall))) stop("No treat_formula model specified")
   if (!("data" %in% names(tempcall))) stop("No data specified")
   if (!("grid_val" %in% names(tempcall)))  stop("No grid_val specified")
-  if (!("treat_mod" %in% names(tempcall)) | ("treat_mod" %in% names(tempcall) & !(tempcall$treat_mod %in% c("NegBinom", "Poisson", "Gamma", "LogNormal", "Normal")))) stop("No valid family specified (\"NegBinom\", \"Poisson\", \"Gamma\", \"Log\", \"Normal\")")
+  if (!("treat_mod" %in% names(tempcall)) | ("treat_mod" %in% names(tempcall) & !(tempcall$treat_mod %in% c("NegBinom", "Poisson", "Gamma", "LogNormal", "Sqrt", "Normal")))) stop("No valid family specified (\"NegBinom\", \"Poisson\", \"Gamma\", \"Log\", \"Sqrt\", \"Normal\")")
   if (tempcall$treat_mod == "Gamma") {if(!(tempcall$link_function %in% c("log", "inverse"))) stop("No valid link function specified for family = Gamma (\"log\", \"inverse\")")}
   if (tempcall$treat_mod == "binomial") {if(!(tempcall$link_function %in% c("logit", "probit", "cauchit", "log", "cloglog"))) stop("No valid link function specified for family = binomial (\"logit\", \"probit\", \"cauchit\", \"log\", \"cloglog\")")}
   if (tempcall$treat_mod == "ordinal" ) {if(!(tempcall$link_function %in% c("logit", "probit", "cauchit", "cloglog"))) stop("No valid link function specified for family = ordinal (\"logit\", \"probit\", \"cauchit\", \"cloglog\")")}
@@ -196,6 +200,18 @@ add_spl_est <- function(Y,
       dnorm(log(tt), mean = est_log_treat, sd = sigma_est)
     }
     gps_fun <- gps_fun_Log
+  }
+  else if (treat_mod == "Sqrt") {
+
+    samp_dat <- data
+    samp_dat[, as.character(tempcall$treat)] <- sqrt(samp_dat[, as.character(tempcall$treat)])
+    result <- lm(formula = formula_t, data = samp_dat)
+    est_sqrt_treat <- result$fitted
+    sigma_est <- summary(result)$sigma
+    gps_fun_sqrt <- function(tt) {
+      dnorm(sqrt(tt), mean = est_sqrt_treat, sd = sigma_est)
+    }
+    gps_fun <- gps_fun_sqrt
   }
   else if (treat_mod == "Normal") {
     samp_dat <- data

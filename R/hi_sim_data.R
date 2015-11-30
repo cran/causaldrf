@@ -1,4 +1,4 @@
-#' Simulated data from Hirano and Imbens (2004).
+#' Simulated data from Hirano and Imbens (2004)
 #'
 #' Simulated data used in the paper "The propensity score with continuous
 #' treatments."

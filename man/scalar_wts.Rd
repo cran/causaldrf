@@ -31,6 +31,8 @@ of \code{X}: a symbolic description of the model to be fitted.  i.e.
 \item{treat_mod}{a description of the error distribution to be used in the
 model for treatment. Options include: \code{"Normal"} for normal model,
 \code{"LogNormal"} for lognormal model, \code{"Poisson"} for Poisson model,
+\code{"Sqrt"} for square-root transformation
+to a normal treatment,
 \code{"NegBinom"} for negative binomial model, \code{"Gamma"} for gamma
 model.}
 

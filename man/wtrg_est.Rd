@@ -2,7 +2,7 @@
 % Please edit documentation in R/wtrg_est.R
 \name{wtrg_est}
 \alias{wtrg_est}
-\title{The weighted regression method}
+\title{The weighted regression estimator}
 \usage{
 wtrg_est(Y,
          treat,
@@ -41,7 +41,11 @@ a list that contains the following components:
 }
 \description{
 This method uses weight matrices to
-estimate parameters for the quadratic or linear fits.
+estimate parameters for an ADRF with quadratic or linear fits.
+}
+\details{
+This function estimates the ADRF by the method described in Schafer and Galagate (2015)
+which uses weight matrices to adjust for possible bias.
 }
 \examples{
 ## Example from Schafer (2015).

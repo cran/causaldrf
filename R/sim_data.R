@@ -1,4 +1,4 @@
-#' Simulated data from Schafer and Galagate (2015).
+#' Simulated data from Schafer and Galagate (2015)
 #'
 #' Simulated data used in the paper "Causal inference with a continuous
 #' treatment and outcome: alternative estimators for parametric dose-response

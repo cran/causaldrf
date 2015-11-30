@@ -2,7 +2,7 @@
 % Please edit documentation in R/ismw_est.R
 \name{ismw_est}
 \alias{ismw_est}
-\title{The inverse second moment weighting (ismw) method}
+\title{The inverse second moment weighting (ismw) estimator}
 \usage{
 ismw_est(Y,
          treat,
@@ -49,7 +49,9 @@ treatment and higher order conditional expectations. It uses outputs from
 the \code{t_mod} function.
 }
 \details{
-This function uses the outputs of the t_mod function as inputs.
+This function estimates the ADRF requires estimated moments and
+uses the outputs of the t_mod function as inputs.  For more details,
+see Schafer and Galagate (2015).
 }
 \examples{
 ## Example from Schafer (2015).
@@ -97,9 +99,6 @@ legend('bottomright',
         cex=1)
 
 rm(example_data, t_mod_list, cond_exp_data, full_data, ismw_list, sample_index)
-
-## Example from Hirano & Imbens (2004).
-  ## Put example here....
 }
 \references{
 Schafer, J.L., Galagate, D.L. (2015).  Causal inference with a

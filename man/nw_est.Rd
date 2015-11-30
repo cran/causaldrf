@@ -33,7 +33,8 @@ of \code{X}: a symbolic description of the model to be fitted.}
 
 \item{treat_mod}{a description of the error distribution to be used in the
 model for treatment. Options include: \code{"Normal"} for normal model,
-\code{"LogNormal"} for lognormal model, \code{"Poisson"} for Poisson model,
+\code{"LogNormal"} for lognormal model, \code{"Sqrt"} for square-root transformation
+to a normal treatment, \code{"Poisson"} for Poisson model,
 \code{"NegBinom"} for negative binomial model, \code{"Gamma"} for gamma
 model.}
 
@@ -51,11 +52,13 @@ a list that contains the following components:
 }
 \description{
 This is a kernel based regression method that uses a kernel as a weighting
-function. The normal kernel is weighted by the inverse of the estimated
-gps.  See Flores et al. (2012) for more details.
+function to estimate the ADRF. The normal kernel is weighted by the inverse of the estimated
+GPS.  See Flores et al. (2012) for more details.
 }
 \details{
-The mean DRF is estimated
+This method is a version of the Nadarya-Watson estimator
+Nadaraya (1964) which is a local constant regression but
+weighted by the inverse of the estimated GPS.
 }
 \examples{
 ## Example from Schafer (2015).
@@ -102,6 +105,9 @@ dose-response models. \emph{Manuscript in preparation}.
 Flores, Carlos A., et al. "Estimating the effects of length of exposure to
 instruction in a training program: the case of job corps."
 \emph{Review of Economics and Statistics} \bold{94.1} (2012): 153-171.
+
+Nadaraya, Elizbar A. "On estimating regression."
+\emph{Theory of Probability \& Its Applications} \bold{9.1} (1964): 141--142.
 }
 \seealso{
 \code{\link{nw_est}}, \code{\link{iw_est}}, \code{\link{hi_est}}, \code{\link{gam_est}},

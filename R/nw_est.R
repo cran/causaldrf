@@ -1,10 +1,9 @@
 ##' The Nadaraya-Watson modified estimator
 ##'
 ##' This is a kernel based regression method that uses a kernel as a weighting
-##' function. The normal kernel is weighted by the inverse of the estimated
-##' gps.  See Flores et al. (2012) for more details.
+##' function to estimate the ADRF. The normal kernel is weighted by the inverse of the estimated
+##' GPS.  See Flores et al. (2012) for more details.
 ##'
-##' The mean DRF is estimated
 ##'
 ##' @param Y is the the name of the outcome variable contained in \code{data}.
 ##' @param treat is the name of the treatment variable contained in
@@ -18,12 +17,20 @@
 ##' @param bandw is the bandwidth.  Default is 1.
 ##' @param treat_mod a description of the error distribution to be used in the
 ##' model for treatment. Options include: \code{"Normal"} for normal model,
-##' \code{"LogNormal"} for lognormal model, \code{"Poisson"} for Poisson model,
+##' \code{"LogNormal"} for lognormal model, \code{"Sqrt"} for square-root transformation
+##' to a normal treatment, \code{"Poisson"} for Poisson model,
 ##' \code{"NegBinom"} for negative binomial model, \code{"Gamma"} for gamma
 ##' model.
 ##' @param link_function is either "log", "inverse", or "identity" for the
 ##' "Gamma" \code{treat_mod}.
 ##' @param ... additional arguments to be passed to the treatment regression function.
+##'
+##' @details
+##'
+##' This method is a version of the Nadarya-Watson estimator
+##' Nadaraya (1964) which is a local constant regression but
+##' weighted by the inverse of the estimated GPS.
+##'
 ##'
 ##' @return \code{nw_est} returns an object of class "causaldrf",
 ##' a list that contains the following components:
@@ -45,6 +52,9 @@
 ##' Flores, Carlos A., et al. "Estimating the effects of length of exposure to
 ##' instruction in a training program: the case of job corps."
 ##' \emph{Review of Economics and Statistics} \bold{94.1} (2012): 153-171.
+##'
+##' Nadaraya, Elizbar A. "On estimating regression."
+##' \emph{Theory of Probability \& Its Applications} \bold{9.1} (1964): 141--142.
 ##'
 ##' @examples
 ##'
@@ -137,7 +147,7 @@ nw_est <- function (Y,
     if (!("data" %in% names(tempcall))) stop("No data specified")
     if (!("grid_val" %in% names(tempcall)))  stop("No grid_val specified")
     if (!("bandw" %in% names(tempcall)))  stop("No bandw specified")
-    if (!("treat_mod" %in% names(tempcall)) | ("treat_mod" %in% names(tempcall) & !(tempcall$treat_mod %in% c("NegBinom", "Poisson", "Gamma", "LogNormal", "Normal")))) stop("No valid family specified (\"NegBinom\", \"Poisson\", \"Gamma\", \"Log\", \"Normal\")")
+    if (!("treat_mod" %in% names(tempcall)) | ("treat_mod" %in% names(tempcall) & !(tempcall$treat_mod %in% c("NegBinom", "Poisson", "Gamma", "LogNormal", "Sqrt", "Normal")))) stop("No valid family specified (\"NegBinom\", \"Poisson\", \"Gamma\", \"Log\", \"Sqrt\", \"Normal\")")
     if (tempcall$treat_mod == "Gamma") {if(!(tempcall$link_function %in% c("log", "inverse"))) stop("No valid link function specified for family = Gamma (\"log\", \"inverse\")")}
     if (tempcall$treat_mod == "binomial") {if(!(tempcall$link_function %in% c("logit", "probit", "cauchit", "log", "cloglog"))) stop("No valid link function specified for family = binomial (\"logit\", \"probit\", \"cauchit\", \"log\", \"cloglog\")")}
     if (tempcall$treat_mod == "ordinal" ) {if(!(tempcall$link_function %in% c("logit", "probit", "cauchit", "cloglog"))) stop("No valid link function specified for family = ordinal (\"logit\", \"probit\", \"cauchit\", \"cloglog\")")}
@@ -203,6 +213,18 @@ nw_est <- function (Y,
       }
       gps_fun <- gps_fun_Log
     }
+    else if (treat_mod == "Sqrt") {
+
+      samp_dat <- data
+      samp_dat[, as.character(tempcall$treat)] <- sqrt(samp_dat[, as.character(tempcall$treat)])
+      result <- lm(formula = formula_t, data = samp_dat, ...)
+      est_sqrt_treat <- result$fitted
+      sigma_est <- summary(result)$sigma
+      gps_fun_sqrt <- function(tt) {
+        dnorm(sqrt(tt), mean = est_sqrt_treat, sd = sigma_est)
+      }
+      gps_fun <- gps_fun_sqrt
+    }
     else if (treat_mod == "Normal") {
       samp_dat <- data
       result <- lm(formula = formula_t, data = samp_dat, ...)
@@ -223,6 +245,19 @@ nw_est <- function (Y,
     if (treat_mod == "LogNormal") {
       K_h <- function(t, h) {
         dnorm((log(tempdat$treat) - log(t))/h, 0, 1)/h
+      }
+      K_h_tild <- function(t, h) {
+        K_h(t, h)/gps_fun(t)
+      }
+      K_est <- numeric(length(grid_val))
+      for (i in 1:length(grid_val)) {
+        K_est[i] <- sum(tempdat$Y * K_h_tild(grid_val[i], bandw))/sum(K_h_tild(grid_val[i],
+                                                                               bandw))
+      }
+    }
+    else if (treat_mod == "Sqrt") {
+      K_h <- function(t, h) {
+        dnorm((sqrt(tempdat$treat) - sqrt(t))/h, 0, 1)/h
       }
       K_h_tild <- function(t, h) {
         K_h(t, h)/gps_fun(t)

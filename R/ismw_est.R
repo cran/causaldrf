@@ -1,11 +1,11 @@
-##' The inverse second moment weighting (ismw) method
+##' The inverse second moment weighting (ismw) estimator
 ##'
 ##' This method estimates the ADRF by using weighting matrices instead of
 ##' scalars.  The weight matrices require conditional expectations of the
 ##' treatment and higher order conditional expectations. It uses outputs from
 ##' the \code{t_mod} function.
 ##'
-##' This function uses the outputs of the t_mod function as inputs.
+##'
 ##'
 ##' @param Y is the the name of the outcome variable contained in \code{data}.
 ##' @param treat is the name of the treatment variable contained in
@@ -21,6 +21,11 @@
 ##' @param e_treat_4 a vector, representing the conditional expectation of
 ##' \code{treat^4} from \code{t_mod}.
 ##' @param degree is 1 for linear and 2 for quadratic outcome model.
+##'
+##' @details
+##' This function estimates the ADRF requires estimated moments and
+##' uses the outputs of the t_mod function as inputs.  For more details,
+##' see Schafer and Galagate (2015).
 ##'
 ##' @return \code{ismw_est} returns an object of class "causaldrf_simple",
 ##' a list that contains the following components:
@@ -86,8 +91,6 @@
 ##'
 ##' rm(example_data, t_mod_list, cond_exp_data, full_data, ismw_list, sample_index)
 ##'
-##' ## Example from Hirano & Imbens (2004).
-##'   ## Put example here....
 ##'
 ##' @usage
 ##' ismw_est(Y,

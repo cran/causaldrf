@@ -1,4 +1,4 @@
-##' The regression method
+##' The regression prediction estimator
 ##'
 ##' This method estimates the linear or quadratic parameters of the ADRF by
 ##' estimating a least-squares fit on the basis functions which are composed of
@@ -37,6 +37,10 @@
 ##' and/or quadratic term.  covar_lin_formula and covar_sq_formula must be specified
 ##' if method = "different".
 ##'
+##' @details
+##' This function estimates the ADRF by the method described in Schafer and Galagate (2015)
+##' that fits an outcome model using a function of the covariates.
+##'
 ##' @return \code{reg_est} returns an object of class "causaldrf_lsfit",
 ##' a list that contains the following components:
 ##' \item{param}{the estimated parameters.}
@@ -53,6 +57,10 @@
 ##' @references Schafer, J.L., Galagate, D.L. (2015).  Causal inference with a
 ##' continuous treatment and outcome: alternative estimators for parametric
 ##' dose-response models. \emph{Manuscript in preparation}.
+##'
+##' Schafer, Joseph L, Kang, Joseph (2008).  Average causal effects from
+##' nonrandomized studies: a practical guide and simulated example.
+##' \emph{Psychological methods}, \bold{13.4}, 279.
 ##'
 ##' @examples
 ##'
@@ -223,8 +231,8 @@ reg_est <- function(Y,
 
 
   theta_0_est_reg <- mean(as.matrix(theta_0_covars) %*% coef_0_reg )
-  theta_1_est_reg <- mean(as.matrix(theta_1_covars) %*% coef_1_reg / tempdat$treat)
-  theta_2_est_reg <- mean(as.matrix(theta_2_covars) %*% coef_2_reg / tempdat$treat^2 )
+  theta_1_est_reg <- mean( (as.matrix(theta_1_covars) %*% coef_1_reg / tempdat$treat)[which(tempdat$treat != 0)]   )  # make sure not to divide by zero.
+  theta_2_est_reg <- mean( (as.matrix(theta_2_covars) %*% coef_2_reg / tempdat$treat^2)[which(tempdat$treat != 0)] )
 
   reg_coefs <- c(theta_0_est_reg,
                  theta_1_est_reg,
@@ -258,7 +266,7 @@ reg_est <- function(Y,
     theta_1_covars <- basis_mat[,  c( (n_covars + 1):(n_covars + n_covars_lin) )   ]
 
     theta_0_est_reg <- mean(as.matrix(theta_0_covars) %*% coef_0_reg )
-    theta_1_est_reg <- mean(as.matrix(theta_1_covars) %*% coef_1_reg / tempdat$treat )
+    theta_1_est_reg <- mean( (as.matrix(theta_1_covars) %*% coef_1_reg / tempdat$treat)[which(tempdat$treat != 0)] )
 
     reg_coefs <- c(theta_0_est_reg,
                    theta_1_est_reg)

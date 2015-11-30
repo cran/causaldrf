@@ -1,7 +1,7 @@
 ##' The inverse weighting estimator (nonparametric method)
 ##'
 ##'
-##' This is a nonparametric method that estimates the CDRF by using a local linear
+##' This is a nonparametric method that estimates the ADRF by using a local linear
 ##' regression of \code{Y} on \code{treat} with weighted kernel function.  For
 ##' details, see Flores et. al. (2012).
 ##'
@@ -17,13 +17,23 @@
 ##' @param bandw is the bandwidth.  Default is 1.
 ##' @param treat_mod a description of the error distribution to be used in the
 ##' model for treatment. Options include: \code{"Normal"} for normal model,
-##' \code{"LogNormal"} for lognormal model, \code{"Poisson"} for Poisson model,
+##' \code{"LogNormal"} for lognormal model, \code{"Sqrt"} for square-root transformation
+##' to a normal treatment, \code{"Poisson"} for Poisson model,
 ##' \code{"NegBinom"} for negative binomial model, \code{"Gamma"} for gamma
 ##' model.
 ##' @param link_function is either "log", "inverse", or "identity" for the
 ##' "Gamma" \code{treat_mod}.
 ##' @param ... additional arguments to be passed to the treatment regression function.
 ##'
+##' @details
+##'
+##' The ADRF is estimated by
+##' \deqn{(D_{0}(t) S_{2}(t) - D_{1}(t) S_{1}(t)) / (S_{0}(t) S_{2}(t) - S_{1}^{2}(t)) }
+##' where \deqn{D_{j}(t) = \sum_{i = 1}^{N} \tilde{K}_{h, X} (T_i - t)  (T_i - t)^j Y_i} and
+##' \eqn{S_{j}(t) = \sum_{i = 1}^{N} \tilde{K}_{h, X} (T_i - t)  (T_i - t)^j}
+##' \eqn{\tilde{K}_{h, X}(t) = K_{h}(t) / \hat{R}_i(t)}
+##' which is a local linear regression.
+##' More details are given in Flores (2012).
 ##'
 ##' @return \code{iw_est} returns an object of class "causaldrf",
 ##' a list that contains the following components:
@@ -97,16 +107,18 @@
 ##'                   treat_mod = "LogNormal")
 ##'
 ##' set.seed(307)
-##' sample_index <- sample(1:nrow(nmes_nonzero), 100)
+##' sample_index <- sample(1:nrow(nmes_nonzero), 1000)
 ##'
 ##' plot(nmes_nonzero$packyears[sample_index],
 ##'      nmes_nonzero$TOTALEXP[sample_index],
 ##'      xlab = "packyears",
 ##'      ylab = "TOTALEXP",
-##'      main = "iw estimate")
+##'      main = "iw estimate",
+##'      ylim = c(0, 10000),
+##'      xlim = c(0, 100))
 ##'
 ##' lines(seq(5, 100, by = 5),
-##'       iw_list$iw_param,
+##'       iw_list$param,
 ##'       lty = 2,
 ##'       lwd = 2,
 ##'       col = "blue")
@@ -177,7 +189,7 @@ iw_est <- function (Y,
   if (!("data" %in% names(tempcall))) stop("No data specified")
   if (!("grid_val" %in% names(tempcall)))  stop("No grid_val specified")
   if (!("bandw" %in% names(tempcall)))  stop("No bandw specified")
-  if (!("treat_mod" %in% names(tempcall)) | ("treat_mod" %in% names(tempcall) & !(tempcall$treat_mod %in% c("NegBinom", "Poisson", "Gamma", "LogNormal", "Normal")))) stop("No valid family specified (\"NegBinom\", \"Poisson\", \"Gamma\", \"Log\", \"Normal\")")
+  if (!("treat_mod" %in% names(tempcall)) | ("treat_mod" %in% names(tempcall) & !(tempcall$treat_mod %in% c("NegBinom", "Poisson", "Gamma", "LogNormal", "Sqrt", "Normal")))) stop("No valid family specified (\"NegBinom\", \"Poisson\", \"Gamma\", \"Log\", \"Sqrt\", \"Normal\")")
   if (tempcall$treat_mod == "Gamma") {if(!(tempcall$link_function %in% c("log", "inverse"))) stop("No valid link function specified for family = Gamma (\"log\", \"inverse\")")}
   if (tempcall$treat_mod == "binomial") {if(!(tempcall$link_function %in% c("logit", "probit", "cauchit", "log", "cloglog"))) stop("No valid link function specified for family = binomial (\"logit\", \"probit\", \"cauchit\", \"log\", \"cloglog\")")}
   if (tempcall$treat_mod == "ordinal" ) {if(!(tempcall$link_function %in% c("logit", "probit", "cauchit", "cloglog"))) stop("No valid link function specified for family = ordinal (\"logit\", \"probit\", \"cauchit\", \"cloglog\")")}
@@ -243,6 +255,18 @@ iw_est <- function (Y,
     }
     gps_fun <- gps_fun_Log
   }
+  else if (treat_mod == "Sqrt") {
+
+    samp_dat <- data
+    samp_dat[, as.character(tempcall$treat)] <- sqrt(samp_dat[, as.character(tempcall$treat)])
+    result <- lm(formula = formula_t, data = samp_dat, ...)
+    est_sqrt_treat <- result$fitted
+    sigma_est <- summary(result)$sigma
+    gps_fun_sqrt <- function(tt) {
+      dnorm(sqrt(tt), mean = est_sqrt_treat, sd = sigma_est)
+    }
+    gps_fun <- gps_fun_sqrt
+  }
   else if (treat_mod == "Normal") {
     samp_dat <- data
     result <- lm(formula = formula_t, data = samp_dat, ...)
@@ -307,6 +331,57 @@ iw_estimator <- function(grid_val, h){
   return(iw_function)
 
 }
+
+} else if (treat_mod == "Sqrt"){
+
+  # K_h <- function(t, h){dnorm( (sqrt(treat) - sqrt(t) )/h, 0, 1) / h }
+  #
+  # K_h_tild <- function(t, h){K_h(t, h) / gps_fun(t)}
+
+  K_h <- function(t, h) {
+    dnorm((sqrt(tempdat$treat) - sqrt(t))/h, 0, 1)/h
+  }
+  K_h_tild <- function(t, h) {
+    K_h(t, h)/gps_fun(t)
+  }
+
+  S_func <- function(grid_val, h, j){
+
+    S_function <- sum( K_h_tild(grid_val, h) * (tempdat$treat - grid_val) ^ j )
+    return(S_function)
+  }
+
+
+  D_func <- function(grid_val, h, j){
+
+    D_function <- sum( K_h_tild(grid_val, h) * (tempdat$treat - grid_val) ^ j * tempdat$Y)
+    return(D_function)
+  }
+
+
+  # iw_est uses S_func and D_func to estimate the ADRF.
+  iw_estimator <- function(grid_val, h){
+
+    iw_function <- numeric(length(grid_val))
+
+    for (i in 1:length(grid_val)){
+      iw_function[i] <- (D_func(grid_val[i], h, j = 0) *
+                           S_func(grid_val[i], h, j = 2) -
+                           D_func(grid_val[i], h, j = 1) *
+                           S_func(grid_val[i], h, j = 1)
+      )    /
+
+        (S_func(grid_val[i], h, j = 0)
+         * S_func(grid_val[i], h, j = 2) -
+           S_func(grid_val[i], h, j = 1)^2
+
+        )
+
+    }
+
+    return(iw_function)
+
+  }
 
 } else {
 

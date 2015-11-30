@@ -14,6 +14,8 @@
 #' to be used in the model for treatment. Options include:
 #' \code{"Normal"} for normal model,
 #' \code{"LogNormal"} for lognormal model,
+#' \code{"Sqrt"} for square-root transformation
+#' to a normal treatment,
 #' \code{"Poisson"} for Poisson model,
 #' \code{"NegBinom"} for negative binomial model,
 #' \code{"Gamma"} for gamma model.
@@ -94,7 +96,7 @@ t_mod <- function(treat,
   if (!("treat" %in% names(tempcall)))  stop("No treat variable specified")
   if (!("treat_formula" %in% names(tempcall))) stop("No treat_formula model specified")
   if (!("data" %in% names(tempcall))) stop("No data specified")
-  if (!("treat_mod" %in% names(tempcall)) | ("treat_mod" %in% names(tempcall) & !(tempcall$treat_mod %in% c("NegBinom", "Poisson", "Gamma", "LogNormal", "Normal")))) stop("No valid family specified (\"NegBinom\", \"Poisson\", \"Gamma\", \"Log\", \"Normal\")")
+  if (!("treat_mod" %in% names(tempcall)) | ("treat_mod" %in% names(tempcall) & !(tempcall$treat_mod %in% c("NegBinom", "Poisson", "Gamma", "LogNormal", "Sqrt", "Normal")))) stop("No valid family specified (\"NegBinom\", \"Poisson\", \"Gamma\", \"Log\", \"Sqrt\", \"Normal\")")
   if (tempcall$treat_mod == "Gamma") {if(!(tempcall$link_function %in% c("log", "inverse"))) stop("No valid link function specified for family = Gamma (\"log\", \"inverse\")")}
   if (tempcall$treat_mod == "binomial") {if(!(tempcall$link_function %in% c("logit", "probit", "cauchit", "log", "cloglog"))) stop("No valid link function specified for family = binomial (\"logit\", \"probit\", \"cauchit\", \"log\", \"cloglog\")")}
   if (tempcall$treat_mod == "ordinal" ) {if(!(tempcall$link_function %in% c("logit", "probit", "cauchit", "cloglog"))) stop("No valid link function specified for family = ordinal (\"logit\", \"probit\", \"cauchit\", \"cloglog\")")}
@@ -257,6 +259,54 @@ t_mod <- function(treat,
                                  est_treat_cube,
                                  est_treat_quartic,
                                  gps))
+
+
+  }  else if (treat_mod == "Sqrt"){
+
+
+    samp_dat[, as.character(tempcall$treat)] <- sqrt(samp_dat[, as.character(tempcall$treat)])
+
+
+
+    result <- lm(formula_t,
+                 data = samp_dat,
+                 ... )
+
+    est_sqrt_treat <- result$fitted
+    sigma_est <- summary(result)$sigma
+
+
+
+
+    # Need to get estimates of higher moments of normally distributed RV using the MGF
+    est_treat <- result$fitted^2 +
+      var(result$fitted)
+
+    est_treat_sq <- result$fitted^4 +
+      6 * result$fitted^2 * var(result$fitted) +
+      3 * var(result$fitted)^2
+
+    est_treat_cube <- result$fitted^6 +
+      15 * result$fitted^4 * var(result$fitted) +
+      45 * result$fitted^2 * var(result$fitted)^2 +
+      15 * var(result$fitted)^3
+
+    est_treat_quartic <- result$fitted^8 +
+      28 * result$fitted^6 * var(result$fitted) +
+      210 * result$fitted^4 * var(result$fitted)^2 +
+      420 * result$fitted^2 * var(result$fitted)^3 +
+      105 * var(result$fitted)^4
+
+
+    gps <- dnorm((samp_dat[, as.character(tempcall$treat)] - result$fitted)/summary(result)$sigma,
+                 mean = 0,
+                 sd = 1 )
+
+    t_mod_data <- data.frame(cbind(est_treat,
+                                   est_treat_sq,
+                                   est_treat_cube,
+                                   est_treat_quartic,
+                                   gps))
 
 
   } else if (treat_mod == "Normal"){

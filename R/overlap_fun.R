@@ -16,7 +16,8 @@
 ##' @param n_class is the number of classes to split \code{gps} into.
 ##' @param treat_mod a description of the error distribution to be used in the
 ##' model for treatment. Options include: \code{"Normal"} for normal model,
-##' \code{"LogNormal"} for lognormal model, \code{"Poisson"} for Poisson model,
+##' \code{"LogNormal"} for lognormal model,  \code{"Sqrt"} for square-root transformation
+##' to a normal treatment, \code{"Poisson"} for Poisson model,
 ##' \code{"NegBinom"} for negative binomial model, \code{"Gamma"} for gamma
 ##' model.
 ##' @param link_function is either "log", "inverse", or "identity" for the
@@ -65,14 +66,14 @@
 ##'
 ##' @usage
 ##'
-##'            overlap_fun(Y,
-##'                       treat,
-##'                       treat_formula,
-##'                       data_set,
-##'                       n_class,
-##'                       treat_mod,
-##'                       link_function,
-##'                       ...)
+##' overlap_fun(Y,
+##'             treat,
+##'             treat_formula,
+##'             data_set,
+##'             n_class,
+##'             treat_mod,
+##'             link_function,
+##'             ...)
 ##'
 ##' @export
 ##'
@@ -116,7 +117,7 @@ overlap_fun <- function(Y,
   if (!("treat_formula" %in% names(tempcall))) stop("No treat_formula model specified")
   if (!("data_set" %in% names(tempcall))) stop("No data_set specified")
   if (!("n_class" %in% names(tempcall))) stop("No n_class specified")
-  if (!("treat_mod" %in% names(tempcall)) | ("treat_mod" %in% names(tempcall) & !(tempcall$treat_mod %in% c("NegBinom", "Poisson", "Gamma", "LogNormal", "Normal")))) stop("No valid family specified (\"NegBinom\", \"Poisson\", \"Gamma\", \"Log\", \"Normal\")")
+  if (!("treat_mod" %in% names(tempcall)) | ("treat_mod" %in% names(tempcall) & !(tempcall$treat_mod %in% c("NegBinom", "Poisson", "Gamma", "LogNormal", "Sqrt", "Normal")))) stop("No valid family specified (\"NegBinom\", \"Poisson\", \"Gamma\", \"Log\", \"Sqrt\", \"Normal\")")
   if (tempcall$treat_mod == "Gamma") {if(!(tempcall$link_function %in% c("log", "inverse"))) stop("No valid link function specified for family = Gamma (\"log\", \"inverse\")")}
   if (tempcall$treat_mod == "binomial") {if(!(tempcall$link_function %in% c("logit", "probit", "cauchit", "log", "cloglog"))) stop("No valid link function specified for family = binomial (\"logit\", \"probit\", \"cauchit\", \"log\", \"cloglog\")")}
   if (tempcall$treat_mod == "ordinal" ) {if(!(tempcall$link_function %in% c("logit", "probit", "cauchit", "cloglog"))) stop("No valid link function specified for family = ordinal (\"logit\", \"probit\", \"cauchit\", \"cloglog\")")}
@@ -234,6 +235,23 @@ overlap_fun <- function(Y,
     gps_fun_Log <- function(tt) {dnorm(log(tt), mean = est_log_treat, sd = sigma_est )}
 
     gps_fun <- gps_fun_Log
+
+
+  } else if (treat_mod == "Sqrt"){
+    full_dataset_ord[, as.character(tempcall$treat)] <- sqrt(treat)
+
+
+
+    result <- lm(treat_formula,
+                 data = full_dataset_ord,
+                 ...)
+
+    est_sqrt_treat <- result$fitted
+    sigma_est <- summary(result)$sigma
+
+    gps_fun_sqrt <- function(tt) {dnorm(sqrt(tt), mean = est_sqrt_treat, sd = sigma_est )}
+
+    gps_fun <- gps_fun_sqrt
 
 
   } else if (treat_mod == "Normal"){

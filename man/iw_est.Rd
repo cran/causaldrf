@@ -33,7 +33,8 @@ of \code{X}: a symbolic description of the model to be fitted.}
 
 \item{treat_mod}{a description of the error distribution to be used in the
 model for treatment. Options include: \code{"Normal"} for normal model,
-\code{"LogNormal"} for lognormal model, \code{"Poisson"} for Poisson model,
+\code{"LogNormal"} for lognormal model, \code{"Sqrt"} for square-root transformation
+to a normal treatment, \code{"Poisson"} for Poisson model,
 \code{"NegBinom"} for negative binomial model, \code{"Gamma"} for gamma
 model.}
 
@@ -50,9 +51,18 @@ a list that contains the following components:
 \item{call}{the matched call.}
 }
 \description{
-This is a nonparametric method that estimates the CDRF by using a local linear
+This is a nonparametric method that estimates the ADRF by using a local linear
 regression of \code{Y} on \code{treat} with weighted kernel function.  For
 details, see Flores et. al. (2012).
+}
+\details{
+The ADRF is estimated by
+\deqn{(D_{0}(t) S_{2}(t) - D_{1}(t) S_{1}(t)) / (S_{0}(t) S_{2}(t) - S_{1}^{2}(t)) }
+where \deqn{D_{j}(t) = \sum_{i = 1}^{N} \tilde{K}_{h, X} (T_i - t)  (T_i - t)^j Y_i} and
+\eqn{S_{j}(t) = \sum_{i = 1}^{N} \tilde{K}_{h, X} (T_i - t)  (T_i - t)^j}
+\eqn{\tilde{K}_{h, X}(t) = K_{h}(t) / \hat{R}_i(t)}
+which is a local linear regression.
+More details are given in Flores (2012).
 }
 \examples{
 ## Example from Schafer (2015).
@@ -110,16 +120,18 @@ iw_list <- iw_est(Y = TOTALEXP,
                   treat_mod = "LogNormal")
 
 set.seed(307)
-sample_index <- sample(1:nrow(nmes_nonzero), 100)
+sample_index <- sample(1:nrow(nmes_nonzero), 1000)
 
 plot(nmes_nonzero$packyears[sample_index],
      nmes_nonzero$TOTALEXP[sample_index],
      xlab = "packyears",
      ylab = "TOTALEXP",
-     main = "iw estimate")
+     main = "iw estimate",
+     ylim = c(0, 10000),
+     xlim = c(0, 100))
 
 lines(seq(5, 100, by = 5),
-      iw_list$iw_param,
+      iw_list$param,
       lty = 2,
       lwd = 2,
       col = "blue")

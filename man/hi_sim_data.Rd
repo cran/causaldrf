@@ -3,7 +3,7 @@
 \docType{data}
 \name{hi_sim_data}
 \alias{hi_sim_data}
-\title{Simulated data from Hirano and Imbens (2004).}
+\title{Simulated data from Hirano and Imbens (2004)}
 \format{A data frame with 1000 rows and 6 variables:}
 \source{
 use the \code{hi_sample} function

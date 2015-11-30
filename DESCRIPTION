@@ -1,9 +1,11 @@
 Package: causaldrf
 Type: Package
 Title: Tools for Estimating Causal Dose Response Functions
-Version: 0.2
-Date: 2015-10-16
-Authors@R: person("Douglas", "Galagate", email = "galagated@gmail.com", role = c("aut", "cre"))
+Version: 0.3
+Date: 2015-11-27
+Authors@R: c(
+    person("Douglas", "Galagate", email = "galagated@gmail.com", role = "cre"),
+    person("Joseph", "Schafer", email = "Joseph.L.Schafer@census.gov", role = "aut"))
 Description: Functions and data to estimate causal dose response functions given continuous, ordinal, or binary treatments.
 License: MIT + file LICENSE
 LazyData: TRUE
@@ -11,9 +13,11 @@ Depends: R(>= 3.1.2)
 Imports: mgcv, splines, stats, survey,
 Suggests: BayesTree, dplyr, foreign, Hmisc, knitr, MASS, nnet,
         reshape2, rmarkdown, sas7bdat, testthat, tidyr
+VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2015-10-16 20:12:47 UTC; Problem Solver
-Author: Douglas Galagate [aut, cre]
+Packaged: 2015-11-30 15:12:02 UTC; Problem Solver
+Author: Douglas Galagate [cre],
+  Joseph Schafer [aut]
 Maintainer: Douglas Galagate <galagated@gmail.com>
 Repository: CRAN
-Date/Publication: 2015-10-18 01:10:16
+Date/Publication: 2015-11-30 17:18:48

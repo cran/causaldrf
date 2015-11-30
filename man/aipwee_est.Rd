@@ -92,6 +92,23 @@ a list that contains the following components:
 This method combines the regression estimator with a residual bias correction
 for estimating a parametric ADRF.
 }
+\details{
+This estimator bears a strong
+  resemblance to general regression estimators in the survey
+  literature, part of a more general class of calibration
+  estimators (Deville and Sarndal, 1992). It is
+  doubly robust, which means that it is consistent if
+  either of the models is true (Scharfstein, Rotnitzky and Robins
+  1999).  If the Y-model is correct, then the first term in
+  the previous equation is unbiased for \eqn{\xi} and the second term has mean
+  zero even if the T-model is wrong. If the Y-model is incorrect, the
+  first term is biased, but the second term gives a consistent estimate
+  of (minus one times) the bias from the Y-model if the T-model is
+  correct.
+
+This function is a doubly-robust estimator that fits an outcome regression
+model with a bias correction term.  For details see Schafer and Galagate (2015).
+}
 \examples{
 ## Example from Schafer (2015).
 
@@ -152,6 +169,22 @@ rm(example_data, t_mod_list, cond_exp_data, full_data, aipwee_list, sample_index
 Schafer, J.L., Galagate, D.L. (2015).  Causal inference with a
 continuous treatment and outcome: alternative estimators for parametric
 dose-response models. \emph{Manuscript in preparation}.
+
+Schafer, Joseph L, Kang, Joseph (2008).  Average causal effects from
+nonrandomized studies: a practical guide and simulated example.
+\emph{Psychological methods}, \bold{13.4}, 279.
+
+Robins, James M and Rotnitzky, Andrea (1995).
+Semiparametric efficiency in multivariate regression models with missing data
+\emph{Journal of the American Statistical Association}, \bold{90.429}, 122--129.
+
+Scharfstein, Daniel O and Rotnitzky, Andrea and Robins, James M (1999).
+Adjusting for nonignorable drop-out using semiparametric nonresponse models
+\emph{Journal of the American Statistical Association}, \bold{94.448}, 1096--1120.
+
+Deville, Jean-Claude and Sarndal, Carl-Erik (1992).
+Calibration estimators in survey sampling
+\emph{Journal of the American Statistical Association}, \bold{87.418}, 376--380.
 }
 \seealso{
 \code{\link{iptw_est}}, \code{\link{ismw_est}},

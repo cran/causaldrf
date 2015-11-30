@@ -33,7 +33,8 @@ of \code{X}: a symbolic description of the model to be fitted.}
 
 \item{treat_mod}{a description of the error distribution to be used in the
 model for treatment. Options include: \code{"Normal"} for normal model,
-\code{"LogNormal"} for lognormal model, \code{"Poisson"} for Poisson model,
+\code{"LogNormal"} for lognormal model, \code{"Sqrt"} for square-root transformation
+to a normal treatment, \code{"Poisson"} for Poisson model,
 \code{"NegBinom"} for negative binomial model, \code{"Gamma"} for gamma
 model.}
 
@@ -52,7 +53,12 @@ a list that contains the following components:
 \item{call}{the matched call.}
 }
 \description{
-additive spline estimator described in Bia et al. (2014).
+This function estimates the ADRF with an additive spline estimator described
+in Bia et al. (2014).
+}
+\details{
+This function estimates the ADRF using additive splines in the
+outcome model described in Bia et al. (2014).
 }
 \examples{
 ## Example from Schafer (2015).

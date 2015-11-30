@@ -17,6 +17,8 @@
 ##' @param treat_mod a description of the error distribution to be used in the
 ##' model for treatment. Options include: \code{"Normal"} for normal model,
 ##' \code{"LogNormal"} for lognormal model, \code{"Poisson"} for Poisson model,
+##' \code{"Sqrt"} for square-root transformation
+##' to a normal treatment,
 ##' \code{"NegBinom"} for negative binomial model, \code{"Gamma"} for gamma
 ##' model.
 ##' @param link_function is either "log", "inverse", or "identity" for the
@@ -107,7 +109,7 @@ scalar_wts <- function(treat,
   if (!("treat_formula" %in% names(tempcall))) stop("No treat_formula model specified")
   if (!("numerator_formula" %in% names(tempcall))) stop("No numerator_formula model specified")
   if (!("data" %in% names(tempcall))) stop("No data specified")
-  if (!("treat_mod" %in% names(tempcall)) | ("treat_mod" %in% names(tempcall) & !(tempcall$treat_mod %in% c("NegBinom", "Poisson", "Gamma", "LogNormal", "Normal")))) stop("No valid family specified (\"NegBinom\", \"Poisson\", \"Gamma\", \"Log\", \"Normal\")")
+  if (!("treat_mod" %in% names(tempcall)) | ("treat_mod" %in% names(tempcall) & !(tempcall$treat_mod %in% c("NegBinom", "Poisson", "Gamma", "LogNormal", "Sqrt", "Normal")))) stop("No valid family specified (\"NegBinom\", \"Poisson\", \"Gamma\", \"Log\", \"Sqrt\", \"Normal\")")
   if (tempcall$treat_mod == "Gamma") {if(!(tempcall$link_function %in% c("log", "inverse"))) stop("No valid link function specified for family = Gamma (\"log\", \"inverse\")")}
   if (tempcall$treat_mod == "NegBinom") {if(!(tempcall$link_function %in% c("log", "inverse"))) stop("No valid link function specified for family = NegBinom (\"log\", \"inverse\")")}
   if (tempcall$treat_mod == "binomial") {if(!(tempcall$link_function %in% c("logit", "probit", "cauchit", "log", "cloglog"))) stop("No valid link function specified for family = binomial (\"logit\", \"probit\", \"cauchit\", \"log\", \"cloglog\")")}
@@ -228,6 +230,32 @@ scalar_wts <- function(treat,
 
 
     samp[, as.character(tempcall$treat)] <- log(samp[, as.character(tempcall$treat)])
+
+
+    result <- lm(formula_t,
+                 data = samp,
+                 ...)
+
+
+    samp$gps_vals <- dnorm(samp[, as.character(tempcall$treat)],
+                           mean = result$fitted,
+                           sd = summary(result)$sigma   )
+
+
+    num_mod <- lm(formula_numerator,
+                  data = samp,
+                  ...)
+
+    samp$num_weight <- dnorm(samp[, as.character(tempcall$treat)],
+                             mean = coef(num_mod)[1],
+                             sd = summary(num_mod)$sigma  )
+    est_import_wt <- samp$num_weight/samp$gps_vals
+
+
+  } else  if (treat_mod == "Sqrt"){
+
+
+    samp[, as.character(tempcall$treat)] <- sqrt(samp[, as.character(tempcall$treat)])
 
 
     result <- lm(formula_t,

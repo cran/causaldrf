@@ -39,12 +39,18 @@
 ##' @param method is "same" if the same set of covariates are used to estimate
 ##' the constant, linear, and/or quadratic term with no spline terms.  If method = "different", then
 ##' different sets of covariates can be used to estimate the constant, linear,
-##' and/or quadratic term.  covar_lin_formula and covar_sq_formula must be specified
+##' and/or quadratic term.  To use spline terms, it is necessary to set
+##' method = "different".  covar_lin_formula and covar_sq_formula must be specified
 ##' if method = "different".
 ##' @param spline_df degrees of freedom. The default, spline_df = NULL, corresponds to no knots.
 ##' @param spline_const is the number of spline terms to include when estimating the constant term.
 ##' @param spline_linear is the number of spline terms to include when estimating the linear term.
 ##' @param spline_quad is the number of spline terms to include when estimating the quadratic term.
+##'
+##' @details
+##' This function estimates the ADRF by the method described in Schafer and Galagate (2015),
+##' that fits an outcome model using a function of the covariates and spline basis
+##' functions derived from the propensity function component.
 ##'
 ##' @return \code{prop_spline_est} returns an object of class "causaldrf_lsfit",
 ##' a list that contains the following components:
@@ -63,6 +69,14 @@
 ##' continuous treatment and outcome: alternative estimators for parametric
 ##' dose-response models. \emph{Manuscript in preparation}.
 ##'
+##' Little, Roderick and An, Hyonggin (2004).  ROBUST LIKELIHOOD-BASED ANALYSIS
+##'  OF MULTIVARIATE DATA WITH MISSING VALUES. \emph{Statistica Sinica}.
+##'  \bold{14}: 949--968.
+##'
+##' Schafer, Joseph L, Kang, Joseph (2008).  Average causal effects from
+##' nonrandomized studies: a practical guide and simulated example.
+##' \emph{Psychological methods}, \bold{13.4}, 279.
+##'
 ##' @examples
 ##'
 ##' ## Example from Schafer (2015).
@@ -78,19 +92,19 @@
 ##' full_data <- cbind(example_data, cond_exp_data)
 ##'
 ##' prop_spline_list <- prop_spline_est(Y = Y,
-##'                                     treat = T,
-##'                                     covar_formula = ~ B.1 + B.2 + B.3 + B.4 + B.5 + B.6 + B.7 + B.8,
-##'                                     covar_lin_formula = ~ 1,
-##'                                     covar_sq_formula = ~ 1,
-##'                                     data = example_data,
-##'                                     e_treat_1 = full_data$est_treat,
-##'                                     degree = 1,
-##'                                     wt = NULL,
-##'                                     method = "different",
-##'                                     spline_df = 5,
-##'                                     spline_const = 4,
-##'                                     spline_linear = 4,
-##'                                     spline_quad = 4)
+##'                             treat = T,
+##'                             covar_formula = ~ B.1 + B.2 + B.3 + B.4 + B.5 + B.6 + B.7 + B.8,
+##'                             covar_lin_formula = ~ 1,
+##'                             covar_sq_formula = ~ 1,
+##'                             data = example_data,
+##'                             e_treat_1 = full_data$est_treat,
+##'                             degree = 1,
+##'                             wt = NULL,
+##'                             method = "different",
+##'                             spline_df = 5,
+##'                             spline_const = 4,
+##'                             spline_linear = 4,
+##'                             spline_quad = 4)
 ##'
 ##' sample_index <- sample(1:1000, 100)
 ##'
@@ -299,8 +313,8 @@ prop_spline_est <- function(Y,
 
 
   theta_0_est_reg <- mean(as.matrix(theta_0_covars) %*% coef_0_reg )
-  theta_1_est_reg <- mean(as.matrix(theta_1_covars) %*% coef_1_reg / tempdat$treat)
-  theta_2_est_reg <- mean(as.matrix(theta_2_covars) %*% coef_2_reg / tempdat$treat^2 )
+  theta_1_est_reg <- mean( (as.matrix(theta_1_covars) %*% coef_1_reg / tempdat$treat)[which(tempdat$treat != 0)] )
+  theta_2_est_reg <- mean( (as.matrix(theta_2_covars) %*% coef_2_reg / tempdat$treat^2 )[which(tempdat$treat != 0)] )
 
   reg_coefs <- c(theta_0_est_reg,
                  theta_1_est_reg,
@@ -334,7 +348,7 @@ prop_spline_est <- function(Y,
     theta_1_covars <- basis_mat[,  c( (n_covars + 1):(n_covars + n_covars_lin) )   ]
 
     theta_0_est_reg <- mean(as.matrix(theta_0_covars) %*% coef_0_reg )
-    theta_1_est_reg <- mean(as.matrix(theta_1_covars) %*% coef_1_reg / tempdat$treat )
+    theta_1_est_reg <- mean((as.matrix(theta_1_covars) %*% coef_1_reg / tempdat$treat)[which(tempdat$treat != 0)] )
 
     reg_coefs <- c(theta_0_est_reg,
                    theta_1_est_reg)

@@ -1,10 +1,10 @@
 ##' The Hirano and Imbens estimator
 ##'
-##' This function estimates the gps function and values and estimates the mean
-##' DRF. gps score is based on different treatment models.  Treatment is
+##' This function estimates the GPS function and estimates the
+##' ADRF. The GPS score is based on different treatment models.  The treatment is
 ##' linearly related to Xs.
 ##'
-##' The ADRF is estimated
+##'
 ##'
 ##' @param Y is the the name of the outcome variable contained in \code{data}.
 ##' @param treat is the name of the treatment variable contained in
@@ -25,12 +25,56 @@
 ##' @param grid_val contains the treatment values to be evaluated.
 ##' @param treat_mod a description of the error distribution to be used in the
 ##' model for treatment. Options include: \code{"Normal"} for normal model,
-##' \code{"LogNormal"} for lognormal model, \code{"Poisson"} for Poisson model,
+##' \code{"LogNormal"} for lognormal model, \code{"Sqrt"} for square-root transformation
+##' to a normal treatment, \code{"Poisson"} for Poisson model,
 ##' \code{"NegBinom"} for negative binomial model, \code{"Gamma"} for gamma
 ##' model, \code{"Binomial"} for binomial model.
 ##' @param link_function For \code{treat_mod = "Gamma"} (fitted using glm) alternatives are "log" or "inverse".
 ##' For \code{treat_mod = "Binomial"} (fitted using glm) alternatives are "logit", "probit", "cauchit", "log" and "cloglog".
 ##' @param ... additional arguments to be passed to the outcome lm() function.
+##'
+##' @details
+##' Hirano (2004) (HI) introduced this imputation-type method that
+##' includes a GPS component.  The idea is to fit a parametric observable
+##' (outcome) model, which includes the estimated GPS as a covariate, to impute
+##' missing potential outcomes.
+##'
+##' The method requires several steps.  First, a model is used to relate
+##' treatment to the recorded covariates.  For example,
+##' \eqn{T_i|\textbf{X}_i \sim \mathcal{N}(\textbf{X}_i^T \boldsymbol{\beta}, \sigma^2)}
+##' and then estimate the \eqn{\boldsymbol{\beta}} parameters.
+##' Next, the GPS for each unit is estimated
+##'
+##' \deqn{
+##' \hat{R}_i(t) = \frac{1}{\sqrt{2 \pi \hat{\sigma}^2}  } e^{-\frac{(t - \textbf{X}_i^T \boldsymbol{\hat{\beta}})^2}{2 \hat{\sigma}^2}}
+##' }
+##' These GPS estimates are used in the outcome or observable model.
+##' The outcome is modeled as a function of \eqn{T_i} and \eqn{\hat{R}_i}
+##' parametrically.  For example,
+##' \deqn{
+##' E[Y_i | T_i, R_i] = \alpha_0 + \alpha_1 T_i + \alpha_2 T_i^2 + \alpha_3 \hat{R}_i + \alpha_4 \hat{R}_i^2 + \alpha_5 \hat{R}_i\cdot T_i
+##' }
+##' After collecting the estimated parameters in the outcome and treatment
+##' models, plug-in the treatment values into the model to estimate the
+##' missing potential outcomes of each individual at that treatment level.
+##' For example, if we plug in \eqn{T_i = t} into the estimated models, then
+##' each unit will have a potential outcome estimated at treatment level
+##' \eqn{T_i= t}.
+##'
+##' \deqn{
+##' \hat{Y}_i(t) = \hat{\alpha}_0 + \hat{\alpha}_1 t + \hat{\alpha}_2 t^2 + \hat{\alpha}_3 \hat{R}_i(t) + \hat{\alpha}_4 \hat{R}_i^2(t) + \hat{\alpha}_5 \hat{R}_i(t) \cdot t
+##' }
+##' The next step is to aggregate these estimated potential outcomes
+##' to get an average treatment effect at dose level \eqn{T_i = t}.
+##' The mean outcome at dose-level \eqn{T_i = t} is given by:
+##' \deqn{
+##' \hat{\mu}(t) = \frac{1}{N}\sum_i^N \hat{\alpha}_0 + \hat{\alpha}_1 t + \hat{\alpha}_2 t^2 + \hat{\alpha}_3 \hat{R}_i(t) + \hat{\alpha}_4 \hat{R^2}_i(t) + \hat{\alpha}_5 \hat{R}_i(t) \cdot t
+##' }
+##'
+##' Different treatment levels are plugged into the previous equation
+##' to estimate the missing potential outcomes.  If many \eqn{t} values
+##' are evaluated, then it is possible to trace out an ADRF.
+##'
 ##'
 ##'
 ##' @return \code{hi_est} returns an object of class "causaldrf",
@@ -50,6 +94,12 @@
 ##' @references Schafer, J.L., Galagate, D.L. (2015).  Causal inference with a
 ##' continuous treatment and outcome: alternative estimators for parametric
 ##' dose-response models. \emph{Manuscript in preparation}.
+##'
+##'
+##' Hirano, Keisuke, Imbens, Guido W (2004).  The propensity score with
+##' continuous treatments.  \emph{Applied Bayesian modeling and
+##' causal inference from incomplete-data perspectives.}
+##'
 ##'
 ##' @examples
 ##'
@@ -165,7 +215,7 @@ hi_est <-  function (Y,
   if (!("outcome_formula" %in% names(tempcall))) stop("No outcome_formula model specified")
   if (!("data" %in% names(tempcall))) stop("No data specified")
   if (!("grid_val" %in% names(tempcall)))  stop("No grid_val specified")
-  if (!("treat_mod" %in% names(tempcall)) | ("treat_mod" %in% names(tempcall) & !(tempcall$treat_mod %in% c("NegBinom", "Poisson", "Gamma", "LogNormal", "Binomial", "Normal")))) stop("No valid family specified (\"NegBinom\", \"Poisson\", \"Gamma\", \"Log\", \"Binomial\", \"Normal\")")
+  if (!("treat_mod" %in% names(tempcall)) | ("treat_mod" %in% names(tempcall) & !(tempcall$treat_mod %in% c("NegBinom", "Poisson", "Gamma", "LogNormal", "Sqrt", "Binomial", "Normal")))) stop("No valid family specified (\"NegBinom\", \"Poisson\", \"Gamma\", \"Log\", \"Sqrt\", \"Binomial\", \"Normal\")")
   if (tempcall$treat_mod == "Gamma") {if(!(tempcall$link_function %in% c("log", "inverse"))) stop("No valid link function specified for family = Gamma (\"log\", \"inverse\")")}
   if (tempcall$treat_mod == "Binomial") {if(!(tempcall$link_function %in% c("logit", "probit", "cauchit", "log", "cloglog"))) stop("No valid link function specified for family = Binomial (\"logit\", \"probit\", \"cauchit\", \"log\", \"cloglog\")")}
   if (tempcall$treat_mod == "Ordinal" ) {if(!(tempcall$link_function %in% c("logit", "probit", "cauchit", "cloglog"))) stop("No valid link function specified for family = Ordinal (\"logit\", \"probit\", \"cauchit\", \"cloglog\")")}
@@ -234,6 +284,18 @@ hi_est <-  function (Y,
       dnorm(log(tt), mean = est_log_treat, sd = sigma_est)
     }
     gps_fun <- gps_fun_Log
+  }
+  else if (treat_mod == "Sqrt") {
+
+    samp_dat <- data
+    samp_dat[, as.character(tempcall$treat)] <- sqrt(samp_dat[, as.character(tempcall$treat)])
+    result <- lm(formula = formula_t, data = samp_dat)
+    est_sqrt_treat <- result$fitted
+    sigma_est <- summary(result)$sigma
+    gps_fun_sqrt <- function(tt) {
+      dnorm(sqrt(tt), mean = est_sqrt_treat, sd = sigma_est)
+    }
+    gps_fun <- gps_fun_sqrt
   }
   else if (treat_mod == "Normal") {
     samp_dat <- data

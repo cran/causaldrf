@@ -2,7 +2,7 @@
 % Please edit documentation in R/reg_est.R
 \name{reg_est}
 \alias{reg_est}
-\title{The regression method}
+\title{The regression prediction estimator}
 \usage{
 reg_est(Y,
         treat,
@@ -64,6 +64,10 @@ This method estimates the linear or quadratic parameters of the ADRF by
 estimating a least-squares fit on the basis functions which are composed of
 combinations of the covariates and treatment values.
 }
+\details{
+This function estimates the ADRF by the method described in Schafer and Galagate (2015)
+that fits an outcome model using a function of the covariates.
+}
 \examples{
 ## Example from Schafer (2015).
 
@@ -107,6 +111,10 @@ rm(example_data, reg_list, sample_index)
 Schafer, J.L., Galagate, D.L. (2015).  Causal inference with a
 continuous treatment and outcome: alternative estimators for parametric
 dose-response models. \emph{Manuscript in preparation}.
+
+Schafer, Joseph L, Kang, Joseph (2008).  Average causal effects from
+nonrandomized studies: a practical guide and simulated example.
+\emph{Psychological methods}, \bold{13.4}, 279.
 }
 \seealso{
 \code{\link{iptw_est}}, \code{\link{ismw_est}},
