@@ -54,7 +54,7 @@
 ##' \emph{Review of Economics and Statistics} \bold{94.1} (2012): 153-171.
 ##'
 ##' Nadaraya, Elizbar A. "On estimating regression."
-##' \emph{Theory of Probability \& Its Applications} \bold{9.1} (1964): 141--142.
+##' \emph{Theory of Probability and Its Applications} \bold{9.1} (1964): 141--142.
 ##'
 ##' @examples
 ##'

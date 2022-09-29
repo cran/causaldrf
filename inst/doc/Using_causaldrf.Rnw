@@ -4,7 +4,7 @@
 \usepackage{amssymb}
 \usepackage{hyperref}
 \usepackage{graphicx}
-\usepackage[utf8x]{inputenc}
+\usepackage[utf8]{inputenc}
 \usepackage{amsmath}
 \usepackage{amsthm}
 \usepackage{bbm}
@@ -67,8 +67,10 @@
 
 \begin{document}
 % \SweaveOpts{concordance=TRUE}
+% \SweaveOpts{concordance=TRUE}
+% \SweaveOpts{concordance=TRUE}
 
-<<include=FALSE>>=
+<<echo=FALSE>>=
 library(knitr)
 opts_chunk$set(
 concordance=TRUE
@@ -83,7 +85,7 @@ the R Package \texttt{causaldrf}}
 \begin{abstract}
 \vspace{-0.08in}
 
-This chapter describes the R package \texttt{causaldrf} for estimating
+This document describes the R package \texttt{causaldrf} for estimating
 average dose response functions (ADRF).  The R package contains functions
 to estimate ADRFs using parametric and non-parametric models when the data
 contains a continuous treatment variable.  The \texttt{causaldrf} R package is
@@ -101,7 +103,7 @@ Propensity Score; Propensity Function; Average Dose Response Function.
 \section{Introduction}
 
 In this
-chapter, we provide examples to illustrate the flexibility and the ease
+document, we provide examples to illustrate the flexibility and the ease
 of use of the \texttt{causaldrf} R package, which
 estimates the average dose response function (ADRF) when the treatment is
 continuous.  The \texttt{causaldrf} R package also provides methods
@@ -132,7 +134,7 @@ and goals.
 
 
 
-This chapter is organized as follows.  In Section
+This document is organized as follows.  In Section
 \ref{section:Sim_data_Moodie}, we introduce a simulated dataset from
 \cite{hirano2004propensity} and \cite{moodie2012estimation} and apply functions from \texttt{causaldrf}
 to estimate the ADRF.  In Section \ref{section:NMES_analysis}, we use data
@@ -954,7 +956,7 @@ The BART and propensity spline estimators have a generally increasing trend.
 
 %  explain what we can do with this newly acquired knowledge.  Answer the question \quotes{so what?}
 
-In this chapter, we have demonstrated how to estimate ADRFs using different statistical techniques
+In this document, we have demonstrated how to estimate ADRFs using different statistical techniques
 using the R package \texttt{causaldrf}, both for simulated and real data, by
 correcting for confounding variables.  \texttt{causaldrf} can accommodate a
 wide array of treatment models, is user friendly, and does not require extensive
@@ -972,10 +974,10 @@ the package, the functions will be adapted to an even wider range of problems.
 
 %
 %
-% \section*{Acknowledgments}
+\section*{Acknowledgments}
 %
-% The author would like to thank colleagues at the University of Maryland,
-% College Park, and U.S. Census Bureau.
+The author would like to thank colleagues at the University of Maryland,
+College Park, and U.S. Census Bureau.  Also, thanks to Steven Pav for coding ideas.
 
 \bibliographystyle{apalike}
 \bibliography{Chapter1Ref09212015}

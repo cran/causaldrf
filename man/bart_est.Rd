@@ -71,7 +71,7 @@ Although most of the focus on BART is for the binary treatment setting,
 
 example_data <- sim_data
 
-\dontrun{
+\donttest{
 # This estimate takes a long time to run...
 bart_list <- bart_est(Y = Y,
           treat = T,

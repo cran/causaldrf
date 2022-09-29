@@ -107,7 +107,7 @@ instruction in a training program: the case of job corps."
 \emph{Review of Economics and Statistics} \bold{94.1} (2012): 153-171.
 
 Nadaraya, Elizbar A. "On estimating regression."
-\emph{Theory of Probability \& Its Applications} \bold{9.1} (1964): 141--142.
+\emph{Theory of Probability and Its Applications} \bold{9.1} (1964): 141--142.
 }
 \seealso{
 \code{\link{nw_est}}, \code{\link{iw_est}}, \code{\link{hi_est}}, \code{\link{gam_est}},
